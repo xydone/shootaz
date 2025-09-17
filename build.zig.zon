@@ -28,7 +28,7 @@
 
     // Tracks the earliest Zig version that the package considers to be a
     // supported use case.
-    .minimum_zig_version = "0.14.0",
+    .minimum_zig_version = "0.15.0",
 
     // This field is optional.
     // Each dependency must either provide a `url` and `hash`, or a `path`.
@@ -37,12 +37,12 @@
     // internet connectivity.
     .dependencies = .{
         .sokol = .{
-            .url = "git+https://github.com/floooh/sokol-zig.git#162ed80f645863c4dcf09e1ba6b1f40e2d4beffe",
-            .hash = "sokol-0.1.0-pb1HK26VLQC1XOkHDW-5TglgwypAKIHGR2HPOTP6limn",
+            .url = "git+https://github.com/floooh/sokol-zig#f54f1b00aa2b2421f06422bd35a0930ff0b17197",
+            .hash = "sokol-0.1.0-pb1HKxdSLgC1cy3VKT18XqI35Yg_V5z7g090GkYtfBoV",
         },
         .cimgui = .{
-            .url = "git+https://github.com/floooh/dcimgui/#3b98e0a57fc17cc72fdda6934bd932426778a16e",
-            .hash = "cimgui-0.1.0-44ClkczdkgCE9Z_0ehliUmEJjg-bjQVy1r55RQPw9N10",
+            .url = "git+https://github.com/floooh/dcimgui#581c2e909c899c21923c779d4c41ea56ab93bbb4",
+            .hash = "cimgui-0.1.0-44ClkQ14kwAiwcr3ioDjxvPuiWQctWrt-tIFtsfP6xmU",
         },
     },
     .paths = .{

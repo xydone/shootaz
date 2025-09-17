@@ -1,4 +1,7 @@
 var state: State = .{};
+
+var floor_bindings: sg.Bindings = undefined;
+
 export fn init() void {
     sg.setup(.{
         .environment = sglue.environment(),
@@ -8,29 +11,8 @@ export fn init() void {
         .logger = .{ .func = slog.func },
     });
 
-    // cube vertex buffer
-    state.bind.vertex_buffers[0] = sg.makeBuffer(.{
-        .usage = .{
-            .dynamic_update = true,
-        },
-        .size = @sizeOf([24][7]f32),
-    });
-    sg.updateBuffer(state.bind.vertex_buffers[0], sg.asRange(&initVertices(state.color_order)));
-
-    // cube index buffer
-    state.bind.index_buffer = sg.makeBuffer(.{
-        .usage = .{ .index_buffer = true },
-
-        .data = sg.asRange(&[_]u16{
-            // each triplet represents a triangle
-            0,  1,  2,  0,  2,  3,
-            6,  5,  4,  7,  6,  4,
-            8,  9,  10, 8,  10, 11,
-            14, 13, 12, 15, 14, 12,
-            16, 17, 18, 16, 18, 19,
-            22, 21, 20, 23, 22, 20,
-        }),
-    });
+    Cube.init(&state);
+    Plane.init(&state);
 
     // shader and pipeline object
     state.pip = sg.makePipeline(.{
@@ -82,15 +64,13 @@ export fn frame() void {
 
     Movement.perFrame(dt, &state);
 
-    state.ry += 2 * dt;
-
-    const vs_params = computeVsParams(state.rx, state.ry);
+    // state.ry += 2 * dt;
 
     sg.beginPass(.{ .action = state.pass_action, .swapchain = sglue.swapchain() });
-    sg.applyPipeline(state.pip);
-    sg.applyBindings(state.bind);
-    sg.applyUniforms(shaders.UB_vs_params, sg.asRange(&vs_params));
-    sg.draw(0, 36, 1);
+
+    Plane.draw(&state);
+    Cube.draw(&state);
+
     // render simgui before the pass ends
     if (state.show_imgui) simgui.render();
     sg.endPass();
@@ -126,15 +106,6 @@ pub fn main() void {
     });
 }
 
-fn computeVsParams(rx: f32, ry: f32) shaders.VsParams {
-    const rxm = mat4.rotate(rx, .{ .x = 1, .y = 0, .z = 0 });
-    const rym = mat4.rotate(ry, .{ .x = 0, .y = 1, .z = 0 });
-    const model = mat4.mul(rxm, rym);
-    const aspect = sapp.widthf() / sapp.heightf();
-    const proj = mat4.persp(60, aspect, 0.01, state.render_distance);
-    return shaders.VsParams{ .mvp = mat4.mul(mat4.mul(proj, state.view), model) };
-}
-
 fn updateCameraView() void {
     // calculate forward vector from yaw/pitch
     const front = Vec3.norm(.{
@@ -145,35 +116,6 @@ fn updateCameraView() void {
 
     const view = mat4.lookat(state.camera.pos, Vec3.add(state.camera.pos, front), state.camera.up);
     state.view = view;
-}
-
-fn initVertices(color_list: [6][4]f32) [24][7]f32 {
-    return .{
-        createVertex(.{ -1, -1, -1 }, color_list[0]),
-        createVertex(.{ 1, -1, -1 }, color_list[0]),
-        createVertex(.{ 1, 1, -1 }, color_list[0]),
-        createVertex(.{ -1, 1, -1 }, color_list[0]),
-        createVertex(.{ -1, -1, 1 }, color_list[1]),
-        createVertex(.{ 1, -1, 1 }, color_list[1]),
-        createVertex(.{ 1, 1, 1 }, color_list[1]),
-        createVertex(.{ -1, 1, 1 }, color_list[1]),
-        createVertex(.{ -1, -1, -1 }, color_list[2]),
-        createVertex(.{ -1, 1, -1 }, color_list[2]),
-        createVertex(.{ -1, 1, 1 }, color_list[2]),
-        createVertex(.{ -1, -1, 1 }, color_list[2]),
-        createVertex(.{ 1, -1, -1 }, color_list[3]),
-        createVertex(.{ 1, 1, -1 }, color_list[3]),
-        createVertex(.{ 1, 1, 1 }, color_list[3]),
-        createVertex(.{ 1, -1, 1 }, color_list[3]),
-        createVertex(.{ -1, -1, -1 }, color_list[4]),
-        createVertex(.{ -1, -1, 1 }, color_list[4]),
-        createVertex(.{ 1, -1, 1 }, color_list[4]),
-        createVertex(.{ 1, -1, -1 }, color_list[4]),
-        createVertex(.{ -1, 1, -1 }, color_list[5]),
-        createVertex(.{ -1, 1, 1 }, color_list[5]),
-        createVertex(.{ 1, 1, 1 }, color_list[5]),
-        createVertex(.{ 1, 1, -1 }, color_list[5]),
-    };
 }
 
 fn rotateColors(direction: enum { left, right }, colors: [6][4]f32) [6][4]f32 {
@@ -204,10 +146,13 @@ fn createVertex(pos: [3]f32, color: [4]f32) [7]f32 {
     return .{ pos[0], pos[1], pos[2], color[0], color[1], color[2], color[3] };
 }
 
+const Plane = @import("components/plane.zig");
+const Cube = @import("components/cube.zig");
+
 const Menus = @import("menus.zig");
 const Controls = @import("controls.zig");
 
-const shaders = @import("shaders/shaders.zig");
+const shaders = @import("shaders/cube.zig");
 
 const Camera = @import("camera.zig");
 

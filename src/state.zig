@@ -1,7 +1,6 @@
 rx: f32 = 0,
 ry: f32 = 0,
 pip: sg.Pipeline = .{},
-bind: sg.Bindings = .{},
 pass_action: sg.PassAction = .{},
 color_order: [6][4]f32 = .{ red, green, blue, orange, cyan, pink },
 view: mat4 = mat4.lookat(.{ .x = 0, .y = 1.5, .z = 6 }, Vec3.zero(), Vec3.up()),
@@ -20,8 +19,6 @@ is_camera_locked: bool = false,
 input_state: InputState = .{},
 
 const InputState = @import("controls.zig").InputState;
-
-const shaders = @import("shaders/shaders.zig");
 
 const Camera = @import("camera.zig");
 

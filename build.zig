@@ -34,27 +34,16 @@ pub fn build(b: *Build) !void {
     const dep_shdc = dep_sokol.builder.dependency("shdc", .{});
 
     // call shdc.createSourceFile() helper function, this returns a `!*Build.Step`:
-    const shdc_step = try sokol.shdc.createSourceFile(b, .{
-        .shdc_dep = dep_shdc,
-        .input = "src/shaders/shaders.glsl",
-        .output = "src/shaders/shaders.zig",
-        .slang = .{
-            .glsl410 = true,
-            .glsl300es = true,
-            .hlsl4 = true,
-            .metal_macos = true,
-            .wgsl = true,
-        },
-    });
 
     const exe = b.addExecutable(.{
         .name = name,
         .root_module = exe_mod,
     });
 
-    // add the shader compilation step as dependency to the build step
-    // which requires the generated Zig source file
-    exe.step.dependOn(shdc_step);
+    for (SHADERS_LIST) |shader_name| {
+        const shdc_step = try buildShader(b, dep_shdc, shader_name);
+        exe.step.dependOn(shdc_step);
+    }
 
     b.installArtifact(exe);
 
@@ -89,7 +78,29 @@ pub fn build(b: *Build) !void {
     check.dependOn(&exe_check.step);
 }
 
+const SHADERS_LIST = [_][]const u8{
+    "cube",
+    "plane",
+};
+
+fn buildShader(b: *std.Build, dep_shdc: *Build.Dependency, shader_name: []const u8) !*Build.Step {
+    const shaders_dir = "src/shaders/";
+
+    return shdc.createSourceFile(b, .{
+        .shdc_dep = dep_shdc,
+        .input = b.fmt("{s}{s}.glsl", .{ shaders_dir, shader_name }),
+        .output = b.fmt("{s}{s}.zig", .{ shaders_dir, shader_name }),
+        .slang = .{
+            .glsl410 = true,
+            .glsl300es = true,
+            .hlsl4 = true,
+        },
+    });
+}
+
 const Build = std.Build;
-const std = @import("std");
-const sokol = @import("sokol");
 const cimgui = @import("cimgui");
+
+const shdc = sokol.shdc;
+const sokol = @import("sokol");
+const std = @import("std");
