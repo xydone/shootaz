@@ -9,7 +9,6 @@ pub inline fn init(state: *State) void {
 
     bindings.index_buffer = sg.makeBuffer(.{
         .usage = .{ .index_buffer = true },
-
         .data = sg.asRange(&[_]u16{
             // each triplet represents a triangle
             0, 1, 2,
@@ -26,7 +25,7 @@ pub inline fn draw(state: *State) void {
 }
 
 pub fn move(move_vec: Vec3) void {
-    location.add(move_vec);
+    location = location.add(move_vec);
 }
 
 fn computeParams(state: State) shader.VsParams {

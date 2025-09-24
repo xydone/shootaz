@@ -27,7 +27,7 @@ pub inline fn init(state: *State) void {
 
 pub inline fn draw(state: *State) void {
     const vs_params = computeVsParams(state.*);
-
+    sg.applyPipeline(state.pip);
     sg.applyBindings(bindings);
     sg.applyUniforms(shader.UB_vs_params, sg.asRange(&vs_params));
     sg.draw(0, 36, 1);

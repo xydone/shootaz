@@ -10,6 +10,9 @@ export fn init() void {
     simgui.setup(.{
         .logger = .{ .func = slog.func },
     });
+    sgl.setup(.{
+        .logger = .{ .func = slog.func },
+    });
 
     Cube.init(&state);
     Plane.init(&state);
@@ -32,7 +35,8 @@ export fn init() void {
     });
 
     // framebuffer clear color
-    state.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0.25, .g = 0.5, .b = 0.75, .a = 1 } };
+    // state.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0.25, .g = 0.5, .b = 0.75, .a = 1 } };
+    state.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0, .g = 0, .b = 0, .a = 1 } };
 
     // lock mouse
     sapp.lockMouse(true);
@@ -51,13 +55,32 @@ export fn frame() void {
         });
         ig.igSetNextWindowPos(.{ .x = 10, .y = 10 }, ig.ImGuiCond_Once);
         ig.igSetNextWindowSize(.{ .x = 400, .y = 100 }, ig.ImGuiCond_Once);
+        const clrs = state.pass_action.colors[0].clear_value;
+        var cast: [4]f32 = .{ clrs.r, clrs.g, clrs.b, clrs.a };
         if (ig.igBegin("Movement settings", &state.show_window, ig.ImGuiWindowFlags_None)) {
             _ = ig.igText("Current speed: %f", Vec3.len(state.velocity));
             _ = ig.igInputFloat("Acceleration", &state.movement_settings.accel);
             _ = ig.igInputFloat("Friction", &state.movement_settings.friction);
             _ = ig.igInputFloat("Max speed", &state.movement_settings.max_speed);
+            const is_color_changed = ig.igColorEdit4("Skybox color", &cast, 0);
+            if (is_color_changed) {
+                state.pass_action.colors[0].clear_value = .{
+                    .r = cast[0],
+                    .g = cast[1],
+                    .b = cast[2],
+                    .a = cast[3],
+                };
+            }
+
+            ig.igEnd();
         }
-        ig.igEnd();
+        if (ig.igBegin("Camera", &state.show_window, ig.ImGuiWindowFlags_None)) {
+            _ = ig.igText("Pitch: %f | Speed: %f | Yaw: %f", state.camera.pitch, state.camera.speed, state.camera.yaw);
+            _ = ig.igText("(%f, %f, %f)", state.camera.pos.x, state.camera.pos.y, state.camera.pos.z);
+            _ = ig.igText("up: (%f, %f, %f)", state.camera.up.x, state.camera.up.y, state.camera.up.z);
+
+            ig.igEnd();
+        }
     }
 
     const dt: f32 = @floatCast(sapp.frameDuration() * 60);
@@ -68,13 +91,26 @@ export fn frame() void {
 
     sg.beginPass(.{ .action = state.pass_action, .swapchain = sglue.swapchain() });
 
-    Plane.draw(&state);
-    Cube.draw(&state);
+    // Plane.draw(&state);
+    // Cube.draw(&state);
+    Grid.draw(state);
 
     // render simgui before the pass ends
     if (state.show_imgui) simgui.render();
     sg.endPass();
     sg.commit();
+}
+
+fn updateCameraView() void {
+    // calculate forward vector from yaw/pitch
+    const front = Vec3.norm(.{
+        .x = @cos(state.camera.yaw) * @cos(state.camera.pitch),
+        .y = @sin(state.camera.pitch),
+        .z = @sin(state.camera.yaw) * @cos(state.camera.pitch),
+    });
+
+    const view = mat4.lookat(state.camera.pos, Vec3.add(state.camera.pos, front), state.camera.up);
+    state.view = view;
 }
 
 export fn input(ev: ?*const sapp.Event) void {
@@ -88,6 +124,7 @@ export fn input(ev: ?*const sapp.Event) void {
 
 export fn cleanup() void {
     simgui.shutdown();
+    sgl.shutdown();
     sg.shutdown();
 }
 
@@ -106,46 +143,7 @@ pub fn main() void {
     });
 }
 
-fn updateCameraView() void {
-    // calculate forward vector from yaw/pitch
-    const front = Vec3.norm(.{
-        .x = @cos(state.camera.yaw) * @cos(state.camera.pitch),
-        .y = @sin(state.camera.pitch),
-        .z = @sin(state.camera.yaw) * @cos(state.camera.pitch),
-    });
-
-    const view = mat4.lookat(state.camera.pos, Vec3.add(state.camera.pos, front), state.camera.up);
-    state.view = view;
-}
-
-fn rotateColors(direction: enum { left, right }, colors: [6][4]f32) [6][4]f32 {
-    var result = colors;
-
-    switch (direction) {
-        .left => {
-            const first = result[0];
-            for (1..6) |i| {
-                result[i - 1] = result[i];
-            }
-            result[5] = first;
-        },
-        .right => {
-            const last = result[5];
-            var i: usize = 5;
-            while (i > 0) : (i -= 1) {
-                result[i] = result[i - 1];
-            }
-            result[0] = last;
-        },
-    }
-
-    return result;
-}
-
-fn createVertex(pos: [3]f32, color: [4]f32) [7]f32 {
-    return .{ pos[0], pos[1], pos[2], color[0], color[1], color[2], color[3] };
-}
-
+const Grid = @import("components/grid.zig");
 const Plane = @import("components/plane.zig");
 const Cube = @import("components/cube.zig");
 
@@ -173,6 +171,7 @@ const State = @import("state.zig");
 const ig = @import("cimgui");
 const simgui = sokol.imgui;
 const slog = sokol.log;
+const sgl = sokol.gl;
 const sg = sokol.gfx;
 const sapp = sokol.app;
 const sglue = sokol.glue;

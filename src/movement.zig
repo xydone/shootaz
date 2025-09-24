@@ -1,4 +1,4 @@
-const valid_keys: [4]Keycode = .{ .W, .S, .A, .D };
+const valid_keys: []const Keycode = &.{ .W, .S, .A, .D, .LEFT_SHIFT, .SPACE };
 
 pub inline fn perFrame(dt: f32, state: *State) void {
     var direction = Vec3.zero();
@@ -7,6 +7,7 @@ pub inline fn perFrame(dt: f32, state: *State) void {
         .y = 0,
         .z = @sin(state.camera.yaw) * @cos(state.camera.pitch),
     });
+    // const right = Vec3.cross(state.camera.up, forward);
     const right = Vec3.cross(forward, state.camera.up);
 
     for (valid_keys) |key| {
@@ -17,6 +18,8 @@ pub inline fn perFrame(dt: f32, state: *State) void {
             .S => direction = Vec3.sub(direction, forward),
             .A => direction = Vec3.sub(direction, right),
             .D => direction = Vec3.add(direction, right),
+            .LEFT_SHIFT => direction = Vec3.sub(direction, state.camera.up),
+            .SPACE => direction = Vec3.add(direction, state.camera.up),
             else => unreachable,
         }
     }
@@ -41,6 +44,16 @@ pub inline fn perFrame(dt: f32, state: *State) void {
     }
 
     state.camera.pos = Vec3.add(state.camera.pos, Vec3.mul(state.velocity, dt));
+
+    var front: Vec3 = .{
+        .x = @cos(state.camera.yaw) * @cos(state.camera.pitch),
+        .y = @sin(state.camera.pitch),
+        .z = @sin(state.camera.yaw) * @cos(state.camera.pitch),
+    };
+    front = Vec3.norm(front);
+
+    state.camera.target = Vec3.add(state.camera.pos, front);
+    // state.camera.target = Vec3.sub(state.camera.pos, front);
 }
 
 const Vec3 = @import("math.zig").Vec3;
