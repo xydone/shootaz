@@ -1,6 +1,7 @@
 const valid_keys: []const Keycode = &.{ .W, .S, .A, .D, .LEFT_SHIFT, .SPACE };
 
 pub inline fn perFrame(dt: f32, state: *State) void {
+    if (state.is_camera_locked) return;
     var direction = Vec3.zero();
     const forward = Vec3.norm(.{
         .x = @cos(state.camera.yaw) * @cos(state.camera.pitch),

@@ -1,4 +1,6 @@
 var bindings: sg.Bindings = undefined;
+var location: Vec3 = .{ .x = 0, .y = 0, .z = -50 };
+
 pub inline fn init(state: *State) void {
     // cube vertex buffer
     bindings.vertex_buffers[0] = sg.makeBuffer(.{
@@ -36,9 +38,13 @@ pub inline fn draw(state: *State) void {
 fn computeVsParams(state: State) shader.VsParams {
     const rxm = mat4.rotate(state.rx, .{ .x = 1, .y = 0, .z = 0 });
     const rym = mat4.rotate(state.ry, .{ .x = 0, .y = 1, .z = 0 });
-    const model = mat4.mul(rxm, rym);
+    const rotation = mat4.mul(rxm, rym);
+
+    const translation = mat4.translate(location);
+    const model = mat4.mul(translation, rotation);
+
     const aspect = sapp.widthf() / sapp.heightf();
-    const proj = mat4.persp(60, aspect, 0.01, state.render_distance);
+    const proj = mat4.persp(60, aspect, 0.1, state.render_distance);
     return shader.VsParams{ .mvp = mat4.mul(mat4.mul(proj, state.view), model) };
 }
 fn initVertices(color_list: [6][4]f32) [24][7]f32 {
@@ -79,6 +85,7 @@ const Vec3 = @import("../math.zig").Vec3;
 const mat4 = @import("../math.zig").Mat4;
 
 const sapp = sokol.app;
+const asRadians = sokol.gl.asRadians;
 const sg = sokol.gfx;
 const sokol = @import("sokol");
 

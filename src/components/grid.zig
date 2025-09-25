@@ -1,31 +1,19 @@
 var location: Vec3 = .{ .x = 0, .y = -1, .z = 0 };
 const AMOUNT_OF_LINES = 64;
 const DISTANCE: f32 = 4;
-const y = 0;
 
 pub inline fn draw(state: State) void {
     const z_offset = (DISTANCE / 8);
-    const camera = state.camera;
     const aspect = sapp.widthf() / sapp.heightf();
 
     sgl.defaults();
 
     sgl.matrixModeProjection();
-    sgl.perspective(sgl.asRadians(60), aspect, 0.1, state.render_distance);
+    const proj = mat4.persp(60, aspect, 0.1, state.render_distance);
+    sgl.loadMatrix(@ptrCast(&proj.m));
 
     sgl.matrixModeModelview();
-
-    sgl.lookat(
-        camera.pos.x,
-        camera.pos.y,
-        camera.pos.z,
-        camera.target.x,
-        camera.target.y,
-        camera.target.z,
-        camera.up.x,
-        camera.up.y,
-        camera.up.z,
-    );
+    sgl.loadMatrix(@ptrCast(&state.view.m));
 
     sgl.beginLines();
     sgl.c3f(1.0, 1.0, 1.0);
@@ -34,8 +22,8 @@ pub inline fn draw(state: State) void {
         var i: f32 = 0;
         while (i < AMOUNT_OF_LINES) : (i += 1) {
             const x = i * DISTANCE - AMOUNT_OF_LINES * DISTANCE * 0.5;
-            sgl.v3f(x, y, -AMOUNT_OF_LINES * DISTANCE);
-            sgl.v3f(x, y, 0.0);
+            sgl.v3f(x, location.y, -AMOUNT_OF_LINES * DISTANCE);
+            sgl.v3f(x, location.y, 0.0);
         }
     }
 
@@ -43,8 +31,8 @@ pub inline fn draw(state: State) void {
         var i: f32 = 0;
         while (i < AMOUNT_OF_LINES) : (i += 1) {
             const z = z_offset + i * DISTANCE - AMOUNT_OF_LINES * DISTANCE;
-            sgl.v3f(-AMOUNT_OF_LINES * DISTANCE * 0.5, y, z);
-            sgl.v3f(AMOUNT_OF_LINES * DISTANCE * 0.5, y, z);
+            sgl.v3f(-AMOUNT_OF_LINES * DISTANCE * 0.5, location.y, z);
+            sgl.v3f(AMOUNT_OF_LINES * DISTANCE * 0.5, location.y, z);
         }
     }
     sgl.end();
