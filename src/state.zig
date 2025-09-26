@@ -1,29 +1,19 @@
-rx: f32 = 0,
-ry: f32 = 0,
-pip: sg.Pipeline = .{},
 pass_action: sg.PassAction = .{},
 color_order: [6][4]f32 = .{ red, green, blue, orange, cyan, pink },
-view: mat4 = mat4.lookat(.{ .x = 0, .y = 1.5, .z = 6 }, Vec3.zero(), Vec3.up()),
 camera: Camera = .{},
-render_distance: f32 = 1000,
-show_imgui: bool = false,
-show_window: bool = true,
-velocity: Vec3 = Vec3.zero(),
-movement_direction: Vec3 = Vec3.zero(),
-movement_settings: struct {
-    accel: f32 = 1,
-    friction: f32 = 10,
-    max_speed: f32 = 1.5,
-} = .{},
-is_camera_locked: bool = false,
 input_state: InputState = .{},
+movement_settings: MovementSettings = .{},
+ui_settings: UISettings = .{},
+
+const UISettings = @import("ui/ui.zig").Settings;
+const MovementSettings = @import("movement.zig").Settings;
 
 const InputState = @import("controls.zig").InputState;
 
 const Camera = @import("camera.zig");
 
 const Vec3 = @import("math.zig").Vec3;
-const mat4 = @import("math.zig").Mat4;
+const Mat4 = @import("math.zig").Mat4;
 
 const green = @import("colors.zig").green;
 const red = @import("colors.zig").red;

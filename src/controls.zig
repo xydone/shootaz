@@ -3,7 +3,7 @@ pub inline fn handle(event: Event, state: *State) void {
         .KEY_DOWN => state.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), true),
         .KEY_UP => state.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), false),
         .MOUSE_MOVE => {
-            if (state.is_camera_locked) return;
+            if (state.camera.is_locked) return;
             const dx: f32 = event.mouse_dx * state.camera.sensitivity;
             const dy: f32 = event.mouse_dy * state.camera.sensitivity;
 

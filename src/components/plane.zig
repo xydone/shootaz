@@ -1,5 +1,7 @@
 var bindings: sg.Bindings = undefined;
 var location: Vec3 = .{ .x = 0, .y = -1, .z = 0 };
+var pipeline: sg.Pipeline = undefined;
+
 pub inline fn init(state: *State) void {
     _ = state; // autofix
     bindings.vertex_buffers[0] = sg.makeBuffer(.{
@@ -15,6 +17,17 @@ pub inline fn init(state: *State) void {
             0, 2, 3,
         }),
     });
+
+    // create pipeline
+    pipeline = sg.makePipeline(.{
+        .shader = sg.makeShader(shader.planeShaderDesc(sg.queryBackend())),
+        .index_type = .UINT16,
+        .depth = .{
+            .compare = .LESS_EQUAL,
+            .write_enabled = true,
+        },
+        .cull_mode = .BACK,
+    });
 }
 
 pub inline fn draw(state: *State) void {
@@ -29,14 +42,14 @@ pub fn move(move_vec: Vec3) void {
 }
 
 fn computeParams(state: State) shader.VsParams {
-    const model = mat4.translate(location);
+    const model = Mat4.translate(location);
 
     const aspect_ratio = sapp.widthf() / sapp.heightf();
 
-    const perspective_projection = mat4.persp(60, aspect_ratio, 0.01, state.render_distance);
+    const perspective_projection = Mat4.persp(60, aspect_ratio, 0.01, state.camera.render_distance);
 
     // MVP = proj * view * model
-    return shader.VsParams{ .mvp = mat4.mul(mat4.mul(perspective_projection, state.view), model) };
+    return shader.VsParams{ .mvp = Mat4.mul(Mat4.mul(perspective_projection, state.camera.view), model) };
 }
 
 fn initVertices() [4][7]f32 {
@@ -56,7 +69,7 @@ const shader = @import("../shaders/plane.zig");
 const State = @import("../state.zig");
 
 const Vec3 = @import("../math.zig").Vec3;
-const mat4 = @import("../math.zig").Mat4;
+const Mat4 = @import("../math.zig").Mat4;
 
 const sapp = sokol.app;
 const sg = sokol.gfx;

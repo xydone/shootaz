@@ -9,11 +9,11 @@ pub inline fn draw(state: State) void {
     sgl.defaults();
 
     sgl.matrixModeProjection();
-    const proj = mat4.persp(60, aspect, 0.1, state.render_distance);
+    const proj = Mat4.persp(60, aspect, 0.1, state.camera.render_distance);
     sgl.loadMatrix(@ptrCast(&proj.m));
 
     sgl.matrixModeModelview();
-    sgl.loadMatrix(@ptrCast(&state.view.m));
+    sgl.loadMatrix(@ptrCast(&state.camera.view.m));
 
     sgl.beginLines();
     sgl.c3f(1.0, 1.0, 1.0);
@@ -42,7 +42,7 @@ pub inline fn draw(state: State) void {
 const createVertex = @import("../util.zig").createVertex;
 
 const Vec3 = @import("../math.zig").Vec3;
-const mat4 = @import("../math.zig").Mat4;
+const Mat4 = @import("../math.zig").Mat4;
 
 const State = @import("../state.zig");
 

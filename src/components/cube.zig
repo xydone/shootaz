@@ -1,5 +1,6 @@
 var bindings: sg.Bindings = undefined;
 var location: Vec3 = .{ .x = 0, .y = 0, .z = -50 };
+var pipeline: sg.Pipeline = undefined;
 
 pub inline fn init(state: *State) void {
     // cube vertex buffer
@@ -25,27 +26,39 @@ pub inline fn init(state: *State) void {
             22, 21, 20, 23, 22, 20,
         }),
     });
+
+    // create pipeline
+    pipeline = sg.makePipeline(.{
+        .shader = sg.makeShader(shader.cubeShaderDesc(sg.queryBackend())),
+        .layout = init: {
+            var l = sg.VertexLayoutState{};
+            l.attrs[shader.ATTR_cube_position].format = .FLOAT3;
+            l.attrs[shader.ATTR_cube_color0].format = .FLOAT4;
+            break :init l;
+        },
+        .index_type = .UINT16,
+        .depth = .{
+            .compare = .LESS_EQUAL,
+            .write_enabled = true,
+        },
+        .cull_mode = .BACK,
+    });
 }
 
 pub inline fn draw(state: *State) void {
     const vs_params = computeVsParams(state.*);
-    sg.applyPipeline(state.pip);
+    sg.applyPipeline(pipeline);
     sg.applyBindings(bindings);
     sg.applyUniforms(shader.UB_vs_params, sg.asRange(&vs_params));
     sg.draw(0, 36, 1);
 }
 
 fn computeVsParams(state: State) shader.VsParams {
-    const rxm = mat4.rotate(state.rx, .{ .x = 1, .y = 0, .z = 0 });
-    const rym = mat4.rotate(state.ry, .{ .x = 0, .y = 1, .z = 0 });
-    const rotation = mat4.mul(rxm, rym);
-
-    const translation = mat4.translate(location);
-    const model = mat4.mul(translation, rotation);
+    const translation = Mat4.translate(location);
 
     const aspect = sapp.widthf() / sapp.heightf();
-    const proj = mat4.persp(60, aspect, 0.1, state.render_distance);
-    return shader.VsParams{ .mvp = mat4.mul(mat4.mul(proj, state.view), model) };
+    const proj = Mat4.persp(60, aspect, 0.1, state.camera.render_distance);
+    return shader.VsParams{ .mvp = Mat4.mul(Mat4.mul(proj, state.camera.view), translation) };
 }
 fn initVertices(color_list: [6][4]f32) [24][7]f32 {
     return .{
@@ -82,7 +95,7 @@ const shader = @import("../shaders/cube.zig");
 const State = @import("../state.zig");
 
 const Vec3 = @import("../math.zig").Vec3;
-const mat4 = @import("../math.zig").Mat4;
+const Mat4 = @import("../math.zig").Mat4;
 
 const sapp = sokol.app;
 const asRadians = sokol.gl.asRadians;

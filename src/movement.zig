@@ -1,7 +1,14 @@
-const valid_keys: []const Keycode = &.{ .W, .S, .A, .D, .LEFT_SHIFT, .SPACE };
-
+pub const Settings = struct {
+    accel: f32 = 1,
+    friction: f32 = 10,
+    max_speed: f32 = 1.5,
+    valid_keys: []const Keycode = &.{ .W, .S, .A, .D, .LEFT_SHIFT, .SPACE },
+    direction: Vec3 = Vec3.zero(),
+    velocity: Vec3 = Vec3.zero(),
+};
 pub inline fn perFrame(dt: f32, state: *State) void {
-    if (state.is_camera_locked) return;
+    const settings = state.movement_settings;
+    if (state.camera.is_locked) return;
     var direction = Vec3.zero();
     const forward = Vec3.norm(.{
         .x = @cos(state.camera.yaw) * @cos(state.camera.pitch),
@@ -11,7 +18,7 @@ pub inline fn perFrame(dt: f32, state: *State) void {
     // const right = Vec3.cross(state.camera.up, forward);
     const right = Vec3.cross(forward, state.camera.up);
 
-    for (valid_keys) |key| {
+    for (settings.valid_keys) |key| {
         if (!state.input_state.isKeyPressed(key)) continue;
 
         switch (key) {
@@ -25,26 +32,26 @@ pub inline fn perFrame(dt: f32, state: *State) void {
         }
     }
 
-    state.movement_direction = direction;
+    state.movement_settings.direction = direction;
 
-    if (Vec3.len(state.movement_direction) > 0) {
-        const dir = Vec3.norm(state.movement_direction);
-        state.velocity = Vec3.add(state.velocity, Vec3.mul(dir, state.movement_settings.accel * dt));
+    if (Vec3.len(settings.direction) > 0) {
+        const dir = Vec3.norm(settings.direction);
+        state.movement_settings.velocity = Vec3.add(state.movement_settings.velocity, Vec3.mul(dir, settings.accel * dt));
     } else {
-        const speed = Vec3.len(state.velocity);
+        const speed = Vec3.len(state.movement_settings.velocity);
         if (speed > 0) {
-            const drop = state.movement_settings.friction * dt;
+            const drop = settings.friction * dt;
             const new_speed = if (speed > drop) speed - drop else 0;
-            state.velocity = Vec3.mul(Vec3.norm(state.velocity), new_speed);
+            state.movement_settings.velocity = Vec3.mul(Vec3.norm(state.movement_settings.velocity), new_speed);
         }
     }
 
-    const vel_len = Vec3.len(state.velocity);
-    if (vel_len > state.movement_settings.max_speed) {
-        state.velocity = Vec3.mul(Vec3.norm(state.velocity), state.movement_settings.max_speed);
+    const vel_len = Vec3.len(state.movement_settings.velocity);
+    if (vel_len > settings.max_speed) {
+        state.movement_settings.velocity = Vec3.mul(Vec3.norm(state.movement_settings.velocity), settings.max_speed);
     }
 
-    state.camera.pos = Vec3.add(state.camera.pos, Vec3.mul(state.velocity, dt));
+    state.camera.pos = Vec3.add(state.camera.pos, Vec3.mul(state.movement_settings.velocity, dt));
 
     var front: Vec3 = .{
         .x = @cos(state.camera.yaw) * @cos(state.camera.pitch),
@@ -58,7 +65,7 @@ pub inline fn perFrame(dt: f32, state: *State) void {
 }
 
 const Vec3 = @import("math.zig").Vec3;
-const mat4 = @import("math.zig").Mat4;
+const Mat4 = @import("math.zig").Mat4;
 
 const State = @import("state.zig");
 
