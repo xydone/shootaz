@@ -2,6 +2,8 @@ var state: State = .{};
 
 var floor_bindings: sg.Bindings = undefined;
 
+var cube_1: Cube = undefined;
+
 export fn init() void {
     sg.setup(.{
         .environment = sglue.environment(),
@@ -13,7 +15,8 @@ export fn init() void {
         .logger = .{ .func = slog.func },
     });
 
-    Cube.init(&state);
+    cube_1 = Cube.init(&state);
+
     Plane.init(&state);
 
     // framebuffer clear color
@@ -41,7 +44,7 @@ export fn frame() void {
     sg.beginPass(.{ .action = state.pass_action, .swapchain = sglue.swapchain() });
 
     Grid.draw(state);
-    Cube.draw(&state);
+    cube_1.draw(&state);
 
     // render simgui before the pass ends
     ui.render(state);

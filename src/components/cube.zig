@@ -1,19 +1,47 @@
-var bindings: sg.Bindings = undefined;
-var location: Vec3 = .{ .x = 0, .y = 0, .z = -50 };
-var pipeline: sg.Pipeline = undefined;
+bindings: sg.Bindings,
+pipeline: sg.Pipeline,
+count: u8,
 
-pub inline fn init(state: *State) void {
+const MAXIMUM_CUBE_COUNT = 1024;
+const CUBE_GAP = 10;
+
+const Cube = @This();
+
+pub inline fn init(state: *State) Cube {
+    var cube: Cube = .{
+        .bindings = .{},
+        .pipeline = .{},
+        .count = 20,
+    };
+    //cube positions
+    var instance_positions: [20]Vec3 = undefined;
+    for (0..20) |i| {
+        const offset: f32 = @floatFromInt(i * CUBE_GAP);
+        instance_positions[i] = .{
+            .x = 0.0,
+            .y = 0.0,
+            .z = -50.0 - offset,
+        };
+    }
+
     // cube vertex buffer
-    bindings.vertex_buffers[0] = sg.makeBuffer(.{
+    cube.bindings.vertex_buffers[0] = sg.makeBuffer(.{
         .usage = .{
             .dynamic_update = true,
         },
         .size = @sizeOf([24][7]f32),
     });
-    sg.updateBuffer(bindings.vertex_buffers[0], sg.asRange(&initVertices(state.color_order)));
+    sg.updateBuffer(cube.bindings.vertex_buffers[0], sg.asRange(&initVertices(state.color_order)));
+
+    // for instancing
+    cube.bindings.vertex_buffers[1] = sg.makeBuffer(.{
+        .usage = .{ .dynamic_update = true },
+        .size = @sizeOf([MAXIMUM_CUBE_COUNT]Vec3),
+    });
+    sg.updateBuffer(cube.bindings.vertex_buffers[1], sg.asRange(&instance_positions));
 
     // cube index buffer
-    bindings.index_buffer = sg.makeBuffer(.{
+    cube.bindings.index_buffer = sg.makeBuffer(.{
         .usage = .{ .index_buffer = true },
 
         .data = sg.asRange(&[_]u16{
@@ -28,12 +56,21 @@ pub inline fn init(state: *State) void {
     });
 
     // create pipeline
-    pipeline = sg.makePipeline(.{
+    cube.pipeline = sg.makePipeline(.{
         .shader = sg.makeShader(shader.cubeShaderDesc(sg.queryBackend())),
         .layout = init: {
             var l = sg.VertexLayoutState{};
+            // vertex buffer 0 = cube geometry
+            l.buffers[0].stride = @sizeOf([7]f32);
             l.attrs[shader.ATTR_cube_position].format = .FLOAT3;
             l.attrs[shader.ATTR_cube_color0].format = .FLOAT4;
+
+            // vertex buffer 1 = instance data
+            l.buffers[1].stride = @sizeOf(Vec3);
+            l.buffers[1].step_func = .PER_INSTANCE;
+            l.attrs[shader.ATTR_cube_instance_offset].buffer_index = 1;
+            l.attrs[shader.ATTR_cube_instance_offset].format = .FLOAT3;
+
             break :init l;
         },
         .index_type = .UINT16,
@@ -43,22 +80,26 @@ pub inline fn init(state: *State) void {
         },
         .cull_mode = .BACK,
     });
+
+    return cube;
 }
 
-pub inline fn draw(state: *State) void {
+pub inline fn draw(self: Cube, state: *State) void {
     const vs_params = computeVsParams(state.*);
-    sg.applyPipeline(pipeline);
-    sg.applyBindings(bindings);
+    sg.applyPipeline(self.pipeline);
+    sg.applyBindings(self.bindings);
     sg.applyUniforms(shader.UB_vs_params, sg.asRange(&vs_params));
-    sg.draw(0, 36, 1);
+    sg.draw(0, 36, self.count);
 }
 
 fn computeVsParams(state: State) shader.VsParams {
-    const translation = Mat4.translate(location);
-
     const aspect = sapp.widthf() / sapp.heightf();
     const proj = Mat4.persp(60, aspect, 0.1, state.camera.render_distance);
-    return shader.VsParams{ .mvp = Mat4.mul(Mat4.mul(proj, state.camera.view), translation) };
+    const vp = Mat4.mul(proj, state.camera.view);
+
+    return shader.VsParams{
+        .mvp = vp,
+    };
 }
 fn initVertices(color_list: [6][4]f32) [24][7]f32 {
     return .{
