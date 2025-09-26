@@ -77,14 +77,20 @@ pub fn deinit(allocator: Allocator) void {
     cube_positions.deinit(allocator);
 }
 
+pub fn getPositions() []Vec3 {
+    return cube_positions.items;
+}
+
 pub fn insert(allocator: Allocator, location: Vec3) void {
     cube_positions.append(allocator, location) catch @panic("OOM");
     sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
 }
 
 pub fn removeIndex(i: u16) void {
-    cube_positions.swapRemove(i);
-    sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
+    _ = cube_positions.swapRemove(i);
+    if (cube_positions.items.len > 0) {
+        sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
+    }
 }
 
 pub fn pop() void {

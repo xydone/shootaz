@@ -19,6 +19,8 @@ export fn init() void {
 
     Plane.init(&state);
 
+    Crosshair.init();
+
     // framebuffer clear color
     // state.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0.25, .g = 0.5, .b = 0.75, .a = 1 } };
     state.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0, .g = 0, .b = 0, .a = 1 } };
@@ -28,12 +30,7 @@ export fn init() void {
 }
 
 export fn frame() void {
-    state.camera.updateView(.{
-        .pos = state.camera.pos,
-        .pitch = state.camera.pitch,
-        .yaw = state.camera.yaw,
-        .up = state.camera.up,
-    });
+    state.camera.updateView();
 
     ui.draw(allocator, &state);
 
@@ -45,6 +42,7 @@ export fn frame() void {
 
     Grid.draw(state);
     Cube.draw(&state);
+    Crosshair.draw();
 
     // render simgui before the pass ends
     ui.render(state);
@@ -58,7 +56,7 @@ export fn input(ev: ?*const sapp.Event) void {
     // _ = simgui.handleEvent(event.*);
     ui.handleInput(event.*);
 
-    Controls.handle(event.*, &state);
+    Controls.handle(event.*, &state, Cube.getPositions());
 
     Menus.handle(event.*, &state);
 }
@@ -89,6 +87,7 @@ const Grid = @import("components/grid.zig");
 const Plane = @import("components/plane.zig");
 const Cube = @import("components/cube.zig");
 
+const Crosshair = @import("components/crosshair.zig");
 const Menus = @import("menus.zig");
 const Controls = @import("controls.zig");
 

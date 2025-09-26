@@ -1,4 +1,5 @@
-pub inline fn handle(event: Event, state: *State) void {
+// TODO: remove cube positions
+pub inline fn handle(event: Event, state: *State, cube_positions: []Vec3) void {
     switch (event.type) {
         .KEY_DOWN => state.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), true),
         .KEY_UP => state.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), false),
@@ -13,6 +14,11 @@ pub inline fn handle(event: Event, state: *State) void {
             // clamp pitch so it doesn’t flip
             if (state.camera.pitch > 1.5) state.camera.pitch = 1.5;
             if (state.camera.pitch < -1.5) state.camera.pitch = -1.5;
+        },
+        .MOUSE_DOWN => {
+            if (!state.ui_settings.show_imgui and !state.camera.is_locked) {
+                Gun.shoot(state.*, cube_positions);
+            }
         },
         else => {},
     }
@@ -34,6 +40,9 @@ pub const InputState = struct {
 
 const LAST_KEY_IN_KEYCODE_LIST = Keycode.MENU;
 
+const Vec3 = @import("math.zig").Vec3; //TODO: remove import, dependant on cube_positions
+
+const Gun = @import("weapons/gun.zig");
 const State = @import("state.zig");
 
 const Event = sapp.Event;

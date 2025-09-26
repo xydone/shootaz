@@ -75,6 +75,10 @@ pub const Vec3 = extern struct {
     pub fn dot(v0: Vec3, v1: Vec3) f32 {
         return v0.x * v1.x + v0.y * v1.y + v0.z * v1.z;
     }
+
+    pub fn toSlice(vec: Vec3) [3]f32 {
+        return .{ vec.x, vec.y, vec.z };
+    }
 };
 
 pub const Mat4 = extern struct {

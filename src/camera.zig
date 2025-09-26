@@ -16,15 +16,18 @@ pub inline fn cm360ToSens(dpi: f32, cm: f32) f32 {
     return (2.0 * pi * 2.54) / (dpi * cm);
 }
 
-pub fn updateView(self: *@This(), params: struct { yaw: f32, pitch: f32, pos: Vec3, up: Vec3 }) void {
-    // calculate forward vector from yaw/pitch
-    const front = Vec3.norm(.{
-        .x = @cos(params.yaw) * @cos(params.pitch),
-        .y = @sin(params.pitch),
-        .z = @sin(params.yaw) * @cos(params.pitch),
+pub fn getForward(self: @This()) Vec3 {
+    return Vec3.norm(.{
+        .x = @cos(self.yaw) * @cos(self.pitch),
+        .y = @sin(self.pitch),
+        .z = @sin(self.yaw) * @cos(self.pitch),
     });
+}
 
-    const view = Mat4.lookat(params.pos, Vec3.add(params.pos, front), params.up);
+pub fn updateView(self: *@This()) void {
+    const forward = self.getForward();
+
+    const view = Mat4.lookat(self.pos, Vec3.add(self.pos, forward), self.up);
     self.view = view;
 }
 
