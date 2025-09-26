@@ -1,5 +1,5 @@
 pub const Settings = struct {
-    show_imgui: bool = false,
+    is_ui_open: bool = false,
     show_window: bool = true,
 };
 pub inline fn init() void {
@@ -9,7 +9,7 @@ pub inline fn init() void {
 }
 
 pub inline fn render(state: State) void {
-    if (state.ui_settings.show_imgui) simgui.render();
+    if (state.ui_settings.is_ui_open) simgui.render();
 }
 
 pub inline fn handleInput(event: sapp.Event) void {
@@ -22,7 +22,7 @@ pub inline fn shutdown() void {
 
 pub inline fn draw(allocator: Allocator, state: *State) void {
     const settings = state.ui_settings;
-    if (settings.show_imgui) {
+    if (settings.is_ui_open) {
         // call simgui.newFrame() before any ImGui calls
         simgui.newFrame(.{
             .width = sapp.width(),
