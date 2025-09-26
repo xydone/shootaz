@@ -1,47 +1,38 @@
-bindings: sg.Bindings,
-pipeline: sg.Pipeline,
-count: u8,
+var bindings: sg.Bindings = .{};
+var pipeline: sg.Pipeline = .{};
 
 const MAXIMUM_CUBE_COUNT = 1024;
-const CUBE_GAP = 10;
+const CUBE_GAP = 2;
 
-const Cube = @This();
+var cube_positions: std.ArrayList(Vec3) = undefined;
 
-pub inline fn init(state: *State) Cube {
-    var cube: Cube = .{
-        .bindings = .{},
-        .pipeline = .{},
-        .count = 20,
-    };
-    //cube positions
-    var instance_positions: [20]Vec3 = undefined;
-    for (0..20) |i| {
-        const offset: f32 = @floatFromInt(i * CUBE_GAP);
-        instance_positions[i] = .{
-            .x = 0.0,
-            .y = 0.0,
-            .z = -50.0 - offset,
-        };
-    }
+pub inline fn init(allocator: Allocator, state: *State) void {
+    cube_positions = std.ArrayList(Vec3).initCapacity(allocator, MAXIMUM_CUBE_COUNT) catch @panic("OOM");
+
+    cube_positions.appendAssumeCapacity(.{
+        .x = 0.0,
+        .y = 0.0,
+        .z = -50.0,
+    });
 
     // cube vertex buffer
-    cube.bindings.vertex_buffers[0] = sg.makeBuffer(.{
+    bindings.vertex_buffers[0] = sg.makeBuffer(.{
         .usage = .{
             .dynamic_update = true,
         },
         .size = @sizeOf([24][7]f32),
     });
-    sg.updateBuffer(cube.bindings.vertex_buffers[0], sg.asRange(&initVertices(state.color_order)));
+    sg.updateBuffer(bindings.vertex_buffers[0], sg.asRange(&initVertices(state.color_order)));
 
     // for instancing
-    cube.bindings.vertex_buffers[1] = sg.makeBuffer(.{
+    bindings.vertex_buffers[1] = sg.makeBuffer(.{
         .usage = .{ .dynamic_update = true },
         .size = @sizeOf([MAXIMUM_CUBE_COUNT]Vec3),
     });
-    sg.updateBuffer(cube.bindings.vertex_buffers[1], sg.asRange(&instance_positions));
+    sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
 
     // cube index buffer
-    cube.bindings.index_buffer = sg.makeBuffer(.{
+    bindings.index_buffer = sg.makeBuffer(.{
         .usage = .{ .index_buffer = true },
 
         .data = sg.asRange(&[_]u16{
@@ -56,7 +47,7 @@ pub inline fn init(state: *State) Cube {
     });
 
     // create pipeline
-    cube.pipeline = sg.makePipeline(.{
+    pipeline = sg.makePipeline(.{
         .shader = sg.makeShader(shader.cubeShaderDesc(sg.queryBackend())),
         .layout = init: {
             var l = sg.VertexLayoutState{};
@@ -80,16 +71,33 @@ pub inline fn init(state: *State) Cube {
         },
         .cull_mode = .BACK,
     });
-
-    return cube;
 }
 
-pub inline fn draw(self: Cube, state: *State) void {
+pub fn deinit(allocator: Allocator) void {
+    cube_positions.deinit(allocator);
+}
+
+pub fn insert(allocator: Allocator, location: Vec3) void {
+    cube_positions.append(allocator, location) catch @panic("OOM");
+    sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
+}
+
+pub fn removeIndex(i: u16) void {
+    cube_positions.swapRemove(i);
+    sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
+}
+
+pub fn pop() void {
+    _ = cube_positions.pop();
+    sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
+}
+
+pub inline fn draw(state: *State) void {
     const vs_params = computeVsParams(state.*);
-    sg.applyPipeline(self.pipeline);
-    sg.applyBindings(self.bindings);
+    sg.applyPipeline(pipeline);
+    sg.applyBindings(bindings);
     sg.applyUniforms(shader.UB_vs_params, sg.asRange(&vs_params));
-    sg.draw(0, 36, self.count);
+    sg.draw(0, 36, @intCast(cube_positions.items.len));
 }
 
 fn computeVsParams(state: State) shader.VsParams {
@@ -143,4 +151,5 @@ const asRadians = sokol.gl.asRadians;
 const sg = sokol.gfx;
 const sokol = @import("sokol");
 
+const Allocator = std.mem.Allocator;
 const std = @import("std");

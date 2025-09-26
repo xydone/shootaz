@@ -20,7 +20,7 @@ pub inline fn shutdown() void {
     simgui.shutdown();
 }
 
-pub inline fn draw(state: *State) void {
+pub inline fn draw(allocator: Allocator, state: *State) void {
     const settings = state.ui_settings;
     if (settings.show_imgui) {
         // call simgui.newFrame() before any ImGui calls
@@ -30,17 +30,16 @@ pub inline fn draw(state: *State) void {
             .delta_time = sapp.frameDuration(),
             .dpi_scale = sapp.dpiScale(),
         });
-        ig.igSetNextWindowPos(.{ .x = 10, .y = 10 }, ig.ImGuiCond_Once);
-        ig.igSetNextWindowSize(.{ .x = 400, .y = 100 }, ig.ImGuiCond_Once);
-
         MovementInfo.draw(state);
         CameraInfo.draw(state);
+        CubeInfo.draw(allocator, state);
     }
 }
 
 // UI Components
 const CameraInfo = @import("camera_info.zig");
 const MovementInfo = @import("movement_info.zig");
+const CubeInfo = @import("cube_info.zig");
 
 const State = @import("../state.zig");
 
@@ -49,4 +48,6 @@ const slog = sokol.log;
 const sapp = sokol.app;
 const sokol = @import("sokol");
 const ig = @import("cimgui");
+
+const Allocator = std.mem.Allocator;
 const std = @import("std");

@@ -2,7 +2,7 @@ var state: State = .{};
 
 var floor_bindings: sg.Bindings = undefined;
 
-var cube_1: Cube = undefined;
+const allocator = std.heap.smp_allocator;
 
 export fn init() void {
     sg.setup(.{
@@ -15,7 +15,7 @@ export fn init() void {
         .logger = .{ .func = slog.func },
     });
 
-    cube_1 = Cube.init(&state);
+    Cube.init(allocator, &state);
 
     Plane.init(&state);
 
@@ -35,7 +35,7 @@ export fn frame() void {
         .up = state.camera.up,
     });
 
-    ui.draw(&state);
+    ui.draw(allocator, &state);
 
     const dt: f32 = @floatCast(sapp.frameDuration() * 60);
 
@@ -44,7 +44,7 @@ export fn frame() void {
     sg.beginPass(.{ .action = state.pass_action, .swapchain = sglue.swapchain() });
 
     Grid.draw(state);
-    cube_1.draw(&state);
+    Cube.draw(&state);
 
     // render simgui before the pass ends
     ui.render(state);
@@ -64,6 +64,7 @@ export fn input(ev: ?*const sapp.Event) void {
 }
 
 export fn cleanup() void {
+    Cube.deinit(allocator);
     ui.shutdown();
     sgl.shutdown();
     sg.shutdown();

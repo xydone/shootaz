@@ -2,7 +2,7 @@ pub inline fn draw(state: *State) void {
     defer ig.igEnd();
     const clrs = state.pass_action.colors[0].clear_value;
     var cast: [4]f32 = .{ clrs.r, clrs.g, clrs.b, clrs.a };
-    if (ig.igBegin("Movement settings", &state.ui_settings.show_window, ig.ImGuiWindowFlags_None)) {
+    if (ig.igBegin("Movement settings", &state.ui_settings.show_window, ig.ImGuiWindowFlags_AlwaysAutoResize)) {
         _ = ig.igText("Current speed: %f", Vec3.len(state.movement_settings.velocity));
         _ = ig.igInputFloat("Acceleration", &state.movement_settings.accel);
         _ = ig.igInputFloat("Friction", &state.movement_settings.friction);
