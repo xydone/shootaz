@@ -5,7 +5,6 @@ pub inline fn handle(event: Event, state: *State) void {
         .ESCAPE => {
             sapp.lockMouse(!sapp.mouseLocked());
             state.camera.is_locked = !state.camera.is_locked;
-            state.ui_settings.is_ui_open = !state.ui_settings.is_ui_open;
         },
         else => {},
     }

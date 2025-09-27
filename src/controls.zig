@@ -16,7 +16,7 @@ pub inline fn handle(event: Event, state: *State, cube_positions: []Vec3) void {
             if (state.camera.pitch < -1.5) state.camera.pitch = -1.5;
         },
         .MOUSE_DOWN => {
-            if (!state.ui_settings.is_ui_open) {
+            if (!state.ui_settings.is_ui_open and !state.camera.is_locked) {
                 Gun.shoot(state.*, cube_positions);
             }
         },

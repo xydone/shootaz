@@ -1,4 +1,5 @@
 var position: Vec3 = .zero();
+var buf: [20]u8 = std.mem.zeroes([20]u8);
 
 pub inline fn draw(allocator: Allocator, state: *State) void {
     defer ig.igEnd();
@@ -6,8 +7,19 @@ pub inline fn draw(allocator: Allocator, state: *State) void {
         _ = ig.igInputFloat("x:", &position.x);
         _ = ig.igInputFloat("y:", &position.y);
         _ = ig.igInputFloat("z:", &position.z);
-        if (ig.igButton("Insert!")) {
+        if (ig.igButton("Insert")) {
             Cube.insert(allocator, position);
+        }
+
+        ig.igSeparatorText("Persistency");
+
+        _ = ig.igInputText("File name", &buf, 20, 0);
+        const name = std.mem.sliceTo(&buf, 0);
+        if (ig.igButton("Save")) {
+            Cube.save(allocator, name) catch @panic("Couldn't save!");
+        }
+        if (ig.igButton("Load")) {
+            Cube.load(allocator, name) catch {};
         }
     }
 }

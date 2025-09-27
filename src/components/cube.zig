@@ -81,6 +81,57 @@ pub fn getPositions() []Vec3 {
     return cube_positions.items;
 }
 
+pub fn save(allocator: Allocator, file_name: []const u8) !void {
+    const path = try std.fmt.allocPrint(allocator, "config/{s}.zon", .{file_name});
+    defer allocator.free(path);
+    const file = std.fs.cwd().createFile(path, .{}) catch |err| file: {
+        switch (err) {
+            // if the parent folder is not found, FileNotFound is thrown.
+            error.FileNotFound => {
+                // fs.path.dirname() returns null if the path is the root dir
+                const dirname = std.fs.path.dirname(path) orelse return err;
+                // create the dir
+                try std.fs.cwd().makeDir(dirname);
+                // retry creating the file
+                break :file try std.fs.cwd().createFile(path, .{});
+            },
+            else => return err,
+        }
+    };
+    defer file.close();
+
+    var writer = std.Io.Writer.Allocating.init(allocator);
+    try std.zon.stringify.serialize(cube_positions.items, .{}, &writer.writer);
+
+    const string = try writer.toOwnedSlice();
+    defer allocator.free(string);
+
+    _ = try file.writeAll(string);
+}
+
+pub fn load(allocator: Allocator, file_name: []const u8) !void {
+    const path = try std.fmt.allocPrint(allocator, "config/{s}.zon", .{file_name});
+    defer allocator.free(path);
+
+    const file = try std.fs.cwd().openFile(path, .{});
+    defer file.close();
+
+    const string = try file.readToEndAllocOptions(
+        allocator,
+        1024,
+        null,
+        std.mem.Alignment.@"8",
+        0,
+    );
+    defer allocator.free(string);
+
+    const slice = try std.zon.parse.fromSlice([]Vec3, allocator, string, null, .{});
+
+    cube_positions.clearRetainingCapacity();
+
+    cube_positions.appendSliceAssumeCapacity(slice);
+}
+
 pub fn insert(allocator: Allocator, location: Vec3) void {
     cube_positions.append(allocator, location) catch @panic("OOM");
     sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
