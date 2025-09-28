@@ -16,6 +16,7 @@ export fn init() void {
     });
 
     Cube.init(allocator, &state);
+    Sphere.init(allocator, &state);
 
     Plane.init(&state);
 
@@ -41,7 +42,8 @@ export fn frame() void {
     sg.beginPass(.{ .action = state.pass_action, .swapchain = sglue.swapchain() });
 
     Grid.draw(state);
-    Cube.draw(&state);
+    // Cube.draw(&state);
+    Sphere.draw(&state);
     Crosshair.draw();
 
     // render simgui before the pass ends
@@ -86,6 +88,7 @@ pub fn main() void {
 const Grid = @import("components/grid.zig");
 const Plane = @import("components/plane.zig");
 const Cube = @import("components/cube.zig");
+const Sphere = @import("components/sphere.zig");
 
 const Crosshair = @import("components/crosshair.zig");
 const Menus = @import("menus.zig");

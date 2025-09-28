@@ -32,7 +32,9 @@ pub inline fn draw(allocator: Allocator, state: *State) void {
         });
         MovementInfo.draw(state);
         CameraInfo.draw(state);
+        FrameInfo.draw(state);
         CubeInfo.draw(allocator, state);
+        SphereInfo.draw(allocator, state);
     }
 }
 
@@ -40,6 +42,8 @@ pub inline fn draw(allocator: Allocator, state: *State) void {
 const CameraInfo = @import("camera_info.zig");
 const MovementInfo = @import("movement_info.zig");
 const CubeInfo = @import("cube_info.zig");
+const SphereInfo = @import("sphere_info.zig");
+const FrameInfo = @import("frame_info.zig");
 
 const State = @import("../state.zig");
 

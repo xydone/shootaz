@@ -82,6 +82,7 @@ const SHADERS_LIST = [_][]const u8{
     "cube",
     "plane",
     "crosshair",
+    "sphere",
 };
 
 fn buildShader(b: *std.Build, dep_shdc: *Build.Dependency, shader_name: []const u8) !*Build.Step {
