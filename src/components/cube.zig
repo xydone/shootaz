@@ -130,6 +130,7 @@ pub fn load(allocator: Allocator, file_name: []const u8) !void {
     cube_positions.clearRetainingCapacity();
 
     cube_positions.appendSliceAssumeCapacity(slice);
+    sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
 }
 
 pub fn insert(allocator: Allocator, location: Vec3) void {
