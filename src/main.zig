@@ -1,4 +1,6 @@
-var state: State = .{};
+var state: State = .{
+    .objects = undefined,
+};
 
 var floor_bindings: sg.Bindings = undefined;
 
@@ -17,6 +19,9 @@ export fn init() void {
 
     Cube.init(allocator, &state);
     Sphere.init(allocator, &state);
+
+    state.objects.cube_list = Cube.getListPtr();
+    state.objects.sphere_list = Sphere.getListPtr();
 
     Plane.init(&state);
 
@@ -42,7 +47,7 @@ export fn frame() void {
     sg.beginPass(.{ .action = state.pass_action, .swapchain = sglue.swapchain() });
 
     Grid.draw(state);
-    // Cube.draw(&state);
+    Cube.draw(&state);
     Sphere.draw(&state);
     Crosshair.draw();
 
@@ -58,7 +63,7 @@ export fn input(ev: ?*const sapp.Event) void {
     // _ = simgui.handleEvent(event.*);
     ui.handleInput(event.*);
 
-    Controls.handle(event.*, &state, Cube.getPositions());
+    Controls.handle(event.*, &state);
 
     Menus.handle(event.*, &state);
 }

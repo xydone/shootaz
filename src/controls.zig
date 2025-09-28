@@ -1,5 +1,4 @@
-// TODO: remove cube positions
-pub inline fn handle(event: Event, state: *State, cube_positions: []Vec3) void {
+pub inline fn handle(event: Event, state: *State) void {
     switch (event.type) {
         .KEY_DOWN => state.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), true),
         .KEY_UP => state.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), false),
@@ -17,7 +16,7 @@ pub inline fn handle(event: Event, state: *State, cube_positions: []Vec3) void {
         },
         .MOUSE_DOWN => {
             if (!state.ui_settings.is_ui_open and !state.camera.is_locked) {
-                Gun.shoot(state.*, cube_positions);
+                Gun.shoot(state);
             }
         },
         else => {},
@@ -39,8 +38,6 @@ pub const InputState = struct {
 };
 
 const LAST_KEY_IN_KEYCODE_LIST = Keycode.MENU;
-
-const Vec3 = @import("math.zig").Vec3; //TODO: remove import, dependant on cube_positions
 
 const Gun = @import("weapons/gun.zig");
 const State = @import("state.zig");

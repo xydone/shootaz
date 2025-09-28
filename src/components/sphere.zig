@@ -1,27 +1,19 @@
+offset: Vec3,
+color: [4]f32,
+radius: f32,
+pub const InstanceData = @This();
+
 var bindings: sg.Bindings = .{};
 var pipeline: sg.Pipeline = .{};
 var element_range: sshape.ElementRange = undefined;
 
 const MAXIMUM_SPHERE_COUNT = 1024;
 
-pub const InstanceData = struct {
-    offset: Vec3,
-    color: [4]f32,
-};
 var instance_data: std.ArrayList(InstanceData) = undefined;
 
 pub inline fn init(allocator: Allocator, state: *State) void {
     _ = state; // autofix
     instance_data = std.ArrayList(InstanceData).initCapacity(allocator, MAXIMUM_SPHERE_COUNT) catch @panic("OOM");
-
-    instance_data.appendAssumeCapacity(.{
-        .offset = .{
-            .x = 0.0,
-            .y = 0.0,
-            .z = -50.0,
-        },
-        .color = red,
-    });
 
     pipeline = sg.makePipeline(.{
         .shader = sg.makeShader(shader.sphereShaderDesc(sg.queryBackend())),
@@ -68,7 +60,6 @@ pub inline fn init(allocator: Allocator, state: *State) void {
         .usage = .{ .dynamic_update = true },
         .size = @sizeOf([MAXIMUM_SPHERE_COUNT]InstanceData),
     });
-    sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(instance_data.items));
 }
 
 pub inline fn draw(state: *State) void {
@@ -97,6 +88,10 @@ pub fn getPositions() []Vec3 {
     return instance_data.items;
 }
 
+pub fn getListPtr() *std.ArrayList(InstanceData) {
+    return &instance_data;
+}
+
 pub fn save(allocator: Allocator, file_name: []const u8) !void {
     saveToFile(InstanceData, allocator, file_name, instance_data.items) catch @panic("Save failed!");
 }
@@ -120,8 +115,8 @@ pub fn load(allocator: Allocator, file_name: []const u8) !void {
     const slice = try std.zon.parse.fromSlice([]InstanceData, allocator, string, null, .{});
 
     instance_data.clearRetainingCapacity();
-
     instance_data.appendSliceAssumeCapacity(slice);
+
     sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(instance_data.items));
 }
 
@@ -137,9 +132,29 @@ pub fn removeIndex(i: u16) void {
     }
 }
 
-pub fn pop() void {
-    _ = instance_data.pop();
-    sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(instance_data.items));
+// https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection.html
+pub fn intercept(ray_origin: [3]f32, ray_dir: [3]f32, center: [3]f32, radius: f32) bool {
+    const L = [_]f32{
+        ray_origin[0] - center[0],
+        ray_origin[1] - center[1],
+        ray_origin[2] - center[2],
+    };
+
+    const a = ray_dir[0] * ray_dir[0] + ray_dir[1] * ray_dir[1] + ray_dir[2] * ray_dir[2];
+    const b = 2.0 * (ray_dir[0] * L[0] + ray_dir[1] * L[1] + ray_dir[2] * L[2]);
+    const c = (L[0] * L[0] + L[1] * L[1] + L[2] * L[2]) - (radius * radius);
+
+    const discriminant = b * b - 4.0 * a * c;
+
+    if (discriminant < 0.0) {
+        return false;
+    }
+
+    const sqrt_disc = std.math.sqrt(discriminant);
+    const t1 = (-b - sqrt_disc) / (2.0 * a);
+    const t2 = (-b + sqrt_disc) / (2.0 * a);
+
+    return (t1 >= 0.0 or t2 >= 0.0);
 }
 
 const saveToFile = @import("../util/saveToFile.zig").saveToFile;

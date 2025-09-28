@@ -1,6 +1,7 @@
 var instance: Sphere.InstanceData = .{
     .offset = .zero(),
     .color = red,
+    .radius = 1,
 };
 var buf: [20]u8 = std.mem.zeroes([20]u8);
 

@@ -1,14 +1,14 @@
-var position: Vec3 = .zero();
+var instance: Cube.InstanceData = .{ .offset = .zero() };
 var buf: [20]u8 = std.mem.zeroes([20]u8);
 
 pub inline fn draw(allocator: Allocator, state: *State) void {
     defer ig.igEnd();
     if (ig.igBegin("Insert cube", &state.ui_settings.show_window, ig.ImGuiWindowFlags_AlwaysAutoResize)) {
-        _ = ig.igInputFloat("x:", &position.x);
-        _ = ig.igInputFloat("y:", &position.y);
-        _ = ig.igInputFloat("z:", &position.z);
+        _ = ig.igInputFloat("x:", &instance.offset.x);
+        _ = ig.igInputFloat("y:", &instance.offset.y);
+        _ = ig.igInputFloat("z:", &instance.offset.z);
         if (ig.igButton("Insert")) {
-            Cube.insert(allocator, position);
+            Cube.insert(allocator, instance);
         }
 
         ig.igSeparatorText("Persistency");

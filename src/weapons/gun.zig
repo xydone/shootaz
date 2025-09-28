@@ -1,53 +1,36 @@
-pub fn shoot(state: State, cube_positions: []Vec3) void {
+pub fn shoot(state: *State) void {
     const origin = state.camera.pos;
     const direction = state.camera.getForward();
 
-    for (cube_positions, 0..) |position, i| {
-        const is_intercepted = doesIntercept(origin.toSlice(), direction.toSlice(), position.toSlice());
+    //TODO: this is ugly
+    for (state.objects.getLists()) |list| {
+        switch (list) {
+            .cubes => |cubes| {
+                for (cubes.items, 0..) |cube, i| {
+                    const is_intercepted = Cube.intercept(origin.toSlice(), direction.toSlice(), cube.offset);
 
-        if (is_intercepted) {
-            Cube.removeIndex(@intCast(i));
-            break;
+                    if (is_intercepted) {
+                        Cube.removeIndex(@intCast(i));
+                        break;
+                    }
+                }
+            },
+            .spheres => |spheres| {
+                for (spheres.items, 0..) |sphere, i| {
+                    const is_intercepted = Sphere.intercept(origin.toSlice(), direction.toSlice(), sphere.offset.toSlice(), sphere.radius);
+
+                    if (is_intercepted) {
+                        Sphere.removeIndex(@intCast(i));
+                        break;
+                    }
+                }
+            },
         }
     }
+    std.debug.print("----------------------\n", .{});
 }
 
-inline fn doesIntercept(rayOrigin: [3]f32, rayDir: [3]f32, instanceOffset: [3]f32) bool {
-    const cubeMin = [_]f32{
-        instanceOffset[0] - 1.0,
-        instanceOffset[1] - 1.0,
-        instanceOffset[2] - 1.0,
-    };
-    const cubeMax = [_]f32{
-        instanceOffset[0] + 1.0,
-        instanceOffset[1] + 1.0,
-        instanceOffset[2] + 1.0,
-    };
-
-    var tmin: f32 = -std.math.floatMin(f32);
-    var tmax: f32 = std.math.floatMax(f32);
-
-    for (0..3) |i| {
-        if (rayDir[i] != 0.0) {
-            var t1 = (cubeMin[i] - rayOrigin[i]) / rayDir[i];
-            var t2 = (cubeMax[i] - rayOrigin[i]) / rayDir[i];
-            if (t1 > t2) {
-                const tmp = t1;
-                t1 = t2;
-                t2 = tmp;
-            }
-            if (t1 > tmin) tmin = t1;
-            if (t2 < tmax) tmax = t2;
-        } else {
-            if (rayOrigin[i] < cubeMin[i] or rayOrigin[i] > cubeMax[i]) {
-                return false;
-            }
-        }
-    }
-
-    return tmax >= tmin and tmax >= 0;
-}
-
+const Sphere = @import("../components/sphere.zig");
 const Cube = @import("../components/cube.zig");
 
 const State = @import("../state.zig");

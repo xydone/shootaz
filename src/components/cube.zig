@@ -1,19 +1,17 @@
+offset: Vec3,
+pub const InstanceData = @This();
 var bindings: sg.Bindings = .{};
 var pipeline: sg.Pipeline = .{};
 
 const MAXIMUM_CUBE_COUNT = 1024;
 const CUBE_GAP = 2;
 
-var cube_positions: std.ArrayList(Vec3) = undefined;
+var cube_positions: std.ArrayList(InstanceData) = undefined;
+var color_order: [6][4]f32 = .{ red, green, blue, orange, cyan, pink };
 
 pub inline fn init(allocator: Allocator, state: *State) void {
-    cube_positions = std.ArrayList(Vec3).initCapacity(allocator, MAXIMUM_CUBE_COUNT) catch @panic("OOM");
-
-    cube_positions.appendAssumeCapacity(.{
-        .x = 0.0,
-        .y = 0.0,
-        .z = -50.0,
-    });
+    _ = state; // autofix
+    cube_positions = std.ArrayList(InstanceData).initCapacity(allocator, MAXIMUM_CUBE_COUNT) catch @panic("OOM");
 
     // cube vertex buffer
     bindings.vertex_buffers[0] = sg.makeBuffer(.{
@@ -22,14 +20,13 @@ pub inline fn init(allocator: Allocator, state: *State) void {
         },
         .size = @sizeOf([24][7]f32),
     });
-    sg.updateBuffer(bindings.vertex_buffers[0], sg.asRange(&initVertices(state.color_order)));
+    sg.updateBuffer(bindings.vertex_buffers[0], sg.asRange(&initVertices(color_order)));
 
     // for instancing
     bindings.vertex_buffers[1] = sg.makeBuffer(.{
         .usage = .{ .dynamic_update = true },
-        .size = @sizeOf([MAXIMUM_CUBE_COUNT]Vec3),
+        .size = @sizeOf([MAXIMUM_CUBE_COUNT]InstanceData),
     });
-    sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
 
     // cube index buffer
     bindings.index_buffer = sg.makeBuffer(.{
@@ -77,12 +74,16 @@ pub fn deinit(allocator: Allocator) void {
     cube_positions.deinit(allocator);
 }
 
-pub fn getPositions() []Vec3 {
+pub fn getPositions() []InstanceData {
     return cube_positions.items;
 }
 
+pub fn getListPtr() *std.ArrayList(InstanceData) {
+    return &cube_positions;
+}
+
 pub fn save(allocator: Allocator, file_name: []const u8) !void {
-    saveToFile(Vec3, allocator, file_name, cube_positions.items) catch @panic("Save failed!");
+    saveToFile(InstanceData, allocator, file_name, cube_positions.items) catch @panic("Save failed!");
 }
 
 pub fn load(allocator: Allocator, file_name: []const u8) !void {
@@ -101,16 +102,16 @@ pub fn load(allocator: Allocator, file_name: []const u8) !void {
     );
     defer allocator.free(string);
 
-    const slice = try std.zon.parse.fromSlice([]Vec3, allocator, string, null, .{});
+    const slice = try std.zon.parse.fromSlice([]InstanceData, allocator, string, null, .{});
 
     cube_positions.clearRetainingCapacity();
-
     cube_positions.appendSliceAssumeCapacity(slice);
+
     sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
 }
 
-pub fn insert(allocator: Allocator, location: Vec3) void {
-    cube_positions.append(allocator, location) catch @panic("OOM");
+pub fn insert(allocator: Allocator, instance: InstanceData) void {
+    cube_positions.append(allocator, instance) catch @panic("OOM");
     sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
 }
 
@@ -119,11 +120,6 @@ pub fn removeIndex(i: u16) void {
     if (cube_positions.items.len > 0) {
         sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
     }
-}
-
-pub fn pop() void {
-    _ = cube_positions.pop();
-    sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(cube_positions.items));
 }
 
 pub inline fn draw(state: *State) void {
@@ -143,6 +139,44 @@ fn computeVsParams(state: State) shader.VsParams {
         .mvp = vp,
     };
 }
+
+pub fn intercept(ray_origin: [3]f32, ray_dir: [3]f32, offset: Vec3) bool {
+    const offset_slice = offset.toSlice();
+    const cubeMin = [_]f32{
+        offset_slice[0] - 1.0,
+        offset_slice[1] - 1.0,
+        offset_slice[2] - 1.0,
+    };
+    const cubeMax = [_]f32{
+        offset_slice[0] + 1.0,
+        offset_slice[1] + 1.0,
+        offset_slice[2] + 1.0,
+    };
+
+    var tmin: f32 = -std.math.floatMin(f32);
+    var tmax: f32 = std.math.floatMax(f32);
+
+    for (0..3) |i| {
+        if (ray_dir[i] != 0.0) {
+            var t1 = (cubeMin[i] - ray_origin[i]) / ray_dir[i];
+            var t2 = (cubeMax[i] - ray_origin[i]) / ray_dir[i];
+            if (t1 > t2) {
+                const tmp = t1;
+                t1 = t2;
+                t2 = tmp;
+            }
+            if (t1 > tmin) tmin = t1;
+            if (t2 < tmax) tmax = t2;
+        } else {
+            if (ray_origin[i] < cubeMin[i] or ray_origin[i] > cubeMax[i]) {
+                return false;
+            }
+        }
+    }
+
+    return tmax >= tmin and tmax >= 0;
+}
+
 fn initVertices(color_list: [6][4]f32) [24][7]f32 {
     return .{
         createVertex(.{ -1, -1, -1 }, color_list[0]),
@@ -175,6 +209,13 @@ fn initVertices(color_list: [6][4]f32) [24][7]f32 {
 const saveToFile = @import("../util/saveToFile.zig").saveToFile;
 
 const createVertex = @import("../util.zig").createVertex;
+
+const green = @import("../colors.zig").green;
+const red = @import("../colors.zig").red;
+const blue = @import("../colors.zig").blue;
+const orange = @import("../colors.zig").orange;
+const cyan = @import("../colors.zig").cyan;
+const pink = @import("../colors.zig").pink;
 
 const shader = @import("../shaders/cube.zig");
 const State = @import("../state.zig");
