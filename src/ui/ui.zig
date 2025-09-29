@@ -1,5 +1,6 @@
 pub const Settings = struct {
     is_ui_open: bool = false,
+    is_imgui_open: bool = false,
     show_window: bool = true,
 };
 pub inline fn init() void {
@@ -9,7 +10,7 @@ pub inline fn init() void {
 }
 
 pub inline fn render(state: State) void {
-    if (state.ui_settings.is_ui_open) simgui.render();
+    if (state.ui_settings.is_imgui_open or state.ui_settings.is_ui_open) simgui.render();
 }
 
 pub inline fn handleInput(event: sapp.Event) void {
@@ -22,7 +23,7 @@ pub inline fn shutdown() void {
 
 pub inline fn draw(allocator: Allocator, state: *State) void {
     const settings = state.ui_settings;
-    if (settings.is_ui_open) {
+    if (settings.is_imgui_open or settings.is_ui_open) {
         // call simgui.newFrame() before any ImGui calls
         simgui.newFrame(.{
             .width = sapp.width(),
@@ -30,11 +31,16 @@ pub inline fn draw(allocator: Allocator, state: *State) void {
             .delta_time = sapp.frameDuration(),
             .dpi_scale = sapp.dpiScale(),
         });
-        MovementInfo.draw(state);
-        CameraInfo.draw(state);
-        FrameInfo.draw(state);
-        CubeInfo.draw(allocator, state);
-        SphereInfo.draw(allocator, state);
+        if (settings.is_imgui_open) {
+            MovementInfo.draw(state);
+            CameraInfo.draw(state);
+            FrameInfo.draw(state);
+            CubeInfo.draw(allocator, state);
+            SphereInfo.draw(allocator, state);
+        }
+        if (settings.is_ui_open) {
+            SettingsMenu.draw(state);
+        }
     }
 }
 
@@ -44,6 +50,7 @@ const MovementInfo = @import("movement_info.zig");
 const CubeInfo = @import("cube_info.zig");
 const SphereInfo = @import("sphere_info.zig");
 const FrameInfo = @import("frame_info.zig");
+const SettingsMenu = @import("settings_menu.zig");
 
 const State = @import("../state.zig");
 

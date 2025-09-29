@@ -81,11 +81,10 @@ pub fn main() void {
         .frame_cb = frame,
         .cleanup_cb = cleanup,
         .event_cb = input,
-        .width = 800,
-        .height = 600,
+        .fullscreen = true,
         .sample_count = 4,
         .icon = .{ .sokol_default = true },
-        .window_title = "cube.zig",
+        .window_title = "shapez",
         .logger = .{ .func = slog.func },
     });
 }

@@ -3,7 +3,7 @@ pub inline fn handle(event: Event, state: *State) void {
         .KEY_DOWN => state.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), true),
         .KEY_UP => state.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), false),
         .MOUSE_MOVE => {
-            if (state.camera.is_locked) return;
+            if (state.ui_settings.is_ui_open) return;
             const dx: f32 = event.mouse_dx * state.camera.sensitivity;
             const dy: f32 = event.mouse_dy * state.camera.sensitivity;
 
@@ -15,7 +15,7 @@ pub inline fn handle(event: Event, state: *State) void {
             if (state.camera.pitch < -1.5) state.camera.pitch = -1.5;
         },
         .MOUSE_DOWN => {
-            if (!state.ui_settings.is_ui_open and !state.camera.is_locked) {
+            if (!state.ui_settings.is_imgui_open and !state.ui_settings.is_ui_open) {
                 Gun.shoot(state);
             }
         },

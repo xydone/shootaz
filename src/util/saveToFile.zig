@@ -18,7 +18,7 @@ pub fn saveToFile(T: type, allocator: Allocator, file_name: []const u8, items: [
     defer file.close();
 
     var writer = std.Io.Writer.Allocating.init(allocator);
-    try std.zon.stringify.serialize(items, .{}, &writer.writer);
+    try std.zon.stringify.serialize(items, .{ .whitespace = false }, &writer.writer);
 
     const string = try writer.toOwnedSlice();
     defer allocator.free(string);

@@ -6,7 +6,6 @@ pitch: f32 = 0.0,
 speed: f32 = 0.1,
 sensitivity: f32 = cm360ToSens(800, 30),
 render_distance: f32 = 1000,
-is_locked: bool = false,
 view: Mat4 = Mat4.lookat(.{ .x = 0, .y = 1.5, .z = 6 }, Vec3.zero(), Vec3.up()),
 
 const Vec3 = @import("math.zig").Vec3;
