@@ -1,5 +1,5 @@
 lua_instance: *Lua,
-is_script_running: bool = false,
+is_update_script_running: bool = false,
 
 const LuaSetup = @This();
 
@@ -9,6 +9,8 @@ pub fn init(allocator: std.mem.Allocator) LuaSetup {
     script_manager.lua_instance.openLibs();
     script_manager.registerFunctions();
 
+    script_manager.doFile(allocator, "crosshair") catch {};
+
     return script_manager;
 }
 
@@ -17,38 +19,31 @@ pub fn deinit(self: LuaSetup) void {
 }
 
 inline fn registerFunctions(self: *LuaSetup) void {
-    self.lua_instance.newTable();
-
-    self.lua_instance.pushFunction(zlua.wrap(lua_create_sphere));
-    self.lua_instance.setField(-2, "create_sphere");
-
-    self.lua_instance.pushFunction(zlua.wrap(lua_get_spheres));
-    self.lua_instance.setField(-2, "get_spheres");
-
-    self.lua_instance.pushFunction(zlua.wrap(lua_get_player_position));
-    self.lua_instance.setField(-2, "get_player_position");
-
-    self.lua_instance.setGlobal("Game");
+    Object.register(self.lua_instance);
+    Player.register(self.lua_instance);
+    Crosshair.register(self.lua_instance);
 }
 
-pub fn doFile(self: *LuaSetup, allocator: Allocator, file_name: []u8) void {
-    self.is_script_running = true;
+pub fn doFile(self: *LuaSetup, allocator: Allocator, file_name: []const u8) error{FileNotFound}!void {
     const path = std.fmt.allocPrintSentinel(allocator, "scripts/{s}.lua", .{file_name}, 0) catch @panic("OOM");
     self.lua_instance.doFile(path) catch {
-        const err = self.lua_instance.toString(-1) catch "failed";
+        const err = self.lua_instance.toString(-1) catch return;
         std.debug.print("err: {s}\n", .{err});
+
+        return error.FileNotFound;
     };
 }
 
 pub fn update(self: *LuaSetup) void {
-    if (self.is_script_running == false) return;
+    if (self.is_update_script_running == false) return;
     _ = self.lua_instance.getGlobal("update") catch @panic("getGlobal failed");
     self.lua_instance.protectedCall(.{}) catch @panic("pcall failed");
 }
 
-const lua_get_player_position = @import("player.zig").lua_get_player_position;
-const lua_create_sphere = @import("object_management.zig").lua_create_sphere;
-const lua_get_spheres = @import("object_management.zig").lua_get_spheres;
+const Crosshair = @import("crosshair.zig");
+const Player = @import("player.zig");
+const Object = @import("object.zig");
+
 const Lua = zlua.Lua;
 const zlua = @import("zlua");
 

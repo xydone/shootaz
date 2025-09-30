@@ -12,7 +12,8 @@ pub inline fn draw(allocator: Allocator) void {
         const name = std.mem.sliceTo(&buf, 0);
 
         if (ig.igButton("Launch script")) {
-            State.instance.script_manager.doFile(allocator, name);
+            State.instance.script_manager.is_update_script_running = true;
+            State.instance.script_manager.doFile(allocator, name) catch {};
         }
     }
 }

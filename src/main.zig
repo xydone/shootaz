@@ -22,7 +22,7 @@ export fn init() void {
 
     Plane.init();
 
-    Crosshair.init();
+    Crosshair.init(allocator);
 
     // framebuffer clear color
     // State.instance.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0.25, .g = 0.5, .b = 0.75, .a = 1 } };
@@ -69,6 +69,7 @@ export fn input(ev: ?*const sapp.Event) void {
 
 export fn cleanup() void {
     Cube.deinit(allocator);
+    Crosshair.deinit(allocator);
     State.instance.script_manager.deinit();
     ui.shutdown();
     sgl.shutdown();

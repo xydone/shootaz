@@ -123,14 +123,12 @@ pub fn load(allocator: Allocator, file_name: []const u8) !void {
 
 pub fn insert(allocator: Allocator, instance: InstanceData) void {
     instance_data.append(allocator, instance) catch @panic("OOM");
-    // sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(instance_data.items));
     is_buffer_dirty = true;
 }
 
 pub fn removeIndex(i: u16) void {
     _ = instance_data.swapRemove(i);
     if (instance_data.items.len > 0) {
-        // sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(instance_data.items));
         is_buffer_dirty = true;
     }
 }

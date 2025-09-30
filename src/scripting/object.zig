@@ -1,6 +1,6 @@
 pub fn lua_create_sphere(lua: *Lua) c_int {
     if (lua.getTop() != 3) {
-        std.debug.print("createSphere: insufficient arguments.\n", .{});
+        std.debug.print("create_sphere: expected 1 argument\n", .{});
         return 0;
     }
 
@@ -29,6 +29,18 @@ pub fn lua_get_spheres(lua: *Lua) c_int {
     }
 
     return 1;
+}
+
+pub inline fn register(lua_instance: *Lua) void {
+    lua_instance.newTable();
+
+    lua_instance.pushFunction(zlua.wrap(lua_create_sphere));
+    lua_instance.setField(-2, "create_sphere");
+
+    lua_instance.pushFunction(zlua.wrap(lua_get_spheres));
+    lua_instance.setField(-2, "get_spheres");
+
+    lua_instance.setGlobal("Object");
 }
 
 const Lua = zlua.Lua;

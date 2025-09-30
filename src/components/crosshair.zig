@@ -2,20 +2,30 @@ var vbuf: sg.Buffer = undefined;
 var pip: sg.Pipeline = .{};
 var bind: sg.Bindings = .{};
 
-const CROSSHAIR_SIZE = 0.02;
-
-var vertices = [_]Vertex{
-    // horizontal
-    .{ .pos = .{ -CROSSHAIR_SIZE, 0.0 }, .color = .{ 1, 1, 1, 1 } },
-    .{ .pos = .{ CROSSHAIR_SIZE, 0.0 }, .color = .{ 1, 1, 1, 1 } },
-    // vertical
-    .{ .pos = .{ 0.0, -CROSSHAIR_SIZE }, .color = .{ 1, 1, 1, 1 } },
-    .{ .pos = .{ 0.0, CROSSHAIR_SIZE }, .color = .{ 1, 1, 1, 1 } },
+pub const Data = struct {
+    pos: [2]f32,
+    color: [4]f32,
 };
 
-pub fn init() void {
+const MAXIMUM_AMOUNT_OF_VERTICES = 1024;
+
+const CROSSHAIR_SIZE = 0.02;
+
+var crosshair_data = std.ArrayList(Data).empty;
+var is_buffer_dirty = true;
+
+pub fn init(allocator: Allocator) void {
+    crosshair_data.appendSlice(allocator, &.{
+        .{ .pos = .{ -CROSSHAIR_SIZE, 0.0 }, .color = .{ 1, 1, 1, 1 } },
+        .{ .pos = .{ CROSSHAIR_SIZE, 0.0 }, .color = .{ 1, 1, 1, 1 } },
+        // vertical
+        .{ .pos = .{ 0.0, -CROSSHAIR_SIZE }, .color = .{ 1, 1, 1, 1 } },
+        .{ .pos = .{ 0.0, CROSSHAIR_SIZE }, .color = .{ 1, 1, 1, 1 } },
+    }) catch @panic("OOM");
+
     vbuf = sg.makeBuffer(.{
-        .data = sg.asRange(&vertices),
+        .usage = .{ .dynamic_update = true },
+        .size = @sizeOf([MAXIMUM_AMOUNT_OF_VERTICES]Data),
     });
 
     pip = sg.makePipeline(.{
@@ -33,18 +43,34 @@ pub fn init() void {
     bind.vertex_buffers[0] = vbuf;
 }
 
-pub inline fn draw() void {
-    sg.applyPipeline(pip);
-    sg.applyBindings(bind);
-    sg.draw(0, 4, 1);
+pub fn deinit(allocator: Allocator) void {
+    crosshair_data.deinit(allocator);
 }
 
-const Vertex = extern struct {
-    pos: [2]f32,
-    color: [4]f32,
-};
+pub inline fn draw() void {
+    flush();
+    sg.applyPipeline(pip);
+    sg.applyBindings(bind);
+    sg.draw(0, @intCast(crosshair_data.items.len), 1);
+}
+
+pub fn set(allocator: Allocator, crosshair_vertices: []Data) error{OddVertexCount}!void {
+    if (crosshair_vertices.len % 2 != 0) return error.OddVertexCount;
+    crosshair_data.clearAndFree(allocator);
+    crosshair_data.appendSlice(allocator, crosshair_vertices) catch @panic("OOM");
+    is_buffer_dirty = true;
+}
+
+pub fn flush() void {
+    if (is_buffer_dirty) {
+        sg.updateBuffer(vbuf, sg.asRange(crosshair_data.items));
+        is_buffer_dirty = false;
+    }
+}
 
 const shader = @import("../shaders/crosshair.zig");
 
-const std = @import("std");
 const sg = @import("sokol").gfx;
+
+const Allocator = std.mem.Allocator;
+const std = @import("std");
