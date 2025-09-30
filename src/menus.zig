@@ -1,10 +1,10 @@
-pub inline fn handle(event: Event, state: *State) void {
+pub inline fn handle(event: Event) void {
     const key: Keycode = if (event.type == .KEY_DOWN) event.key_code else return;
     switch (key) {
-        .C => state.ui_settings.is_imgui_open = !state.ui_settings.is_imgui_open,
+        .C => State.instance.ui_settings.is_imgui_open = !State.instance.ui_settings.is_imgui_open,
         .ESCAPE => {
             sapp.lockMouse(!sapp.mouseLocked());
-            state.ui_settings.is_ui_open = !state.ui_settings.is_ui_open;
+            State.instance.ui_settings.is_ui_open = !State.instance.ui_settings.is_ui_open;
         },
         else => {},
     }

@@ -2,18 +2,18 @@ var location: Vec3 = .{ .x = 0, .y = -1, .z = 0 };
 const AMOUNT_OF_LINES = 64;
 const DISTANCE: f32 = 4;
 
-pub inline fn draw(state: State) void {
+pub inline fn draw() void {
     const z_offset = (DISTANCE / 8);
     const aspect = sapp.widthf() / sapp.heightf();
 
     sgl.defaults();
 
     sgl.matrixModeProjection();
-    const proj = Mat4.persp(60, aspect, 0.1, state.camera.render_distance);
+    const proj = Mat4.persp(60, aspect, 0.1, State.instance.camera.render_distance);
     sgl.loadMatrix(@ptrCast(&proj.m));
 
     sgl.matrixModeModelview();
-    sgl.loadMatrix(@ptrCast(&state.camera.view.m));
+    sgl.loadMatrix(@ptrCast(&State.instance.camera.view.m));
 
     sgl.beginLines();
     sgl.c3f(1.0, 1.0, 1.0);

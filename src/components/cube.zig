@@ -9,8 +9,7 @@ const CUBE_GAP = 2;
 var cube_positions: std.ArrayList(InstanceData) = undefined;
 var color_order: [6][4]f32 = .{ red, green, blue, orange, cyan, pink };
 
-pub inline fn init(allocator: Allocator, state: *State) void {
-    _ = state; // autofix
+pub inline fn init(allocator: Allocator) void {
     cube_positions = std.ArrayList(InstanceData).initCapacity(allocator, MAXIMUM_CUBE_COUNT) catch @panic("OOM");
 
     // cube vertex buffer
@@ -122,18 +121,18 @@ pub fn removeIndex(i: u16) void {
     }
 }
 
-pub inline fn draw(state: *State) void {
-    const vs_params = computeVsParams(state.*);
+pub inline fn draw() void {
+    const vs_params = computeVsParams();
     sg.applyPipeline(pipeline);
     sg.applyBindings(bindings);
     sg.applyUniforms(shader.UB_vs_params, sg.asRange(&vs_params));
     sg.draw(0, 36, @intCast(cube_positions.items.len));
 }
 
-fn computeVsParams(state: State) shader.VsParams {
+fn computeVsParams() shader.VsParams {
     const aspect = sapp.widthf() / sapp.heightf();
-    const proj = Mat4.persp(60, aspect, 0.1, state.camera.render_distance);
-    const vp = Mat4.mul(proj, state.camera.view);
+    const proj = Mat4.persp(60, aspect, 0.1, State.instance.camera.render_distance);
+    const vp = Mat4.mul(proj, State.instance.camera.view);
 
     return shader.VsParams{
         .mvp = vp,

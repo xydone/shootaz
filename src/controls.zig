@@ -1,22 +1,22 @@
-pub inline fn handle(event: Event, state: *State) void {
+pub inline fn handle(event: Event) void {
     switch (event.type) {
-        .KEY_DOWN => state.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), true),
-        .KEY_UP => state.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), false),
+        .KEY_DOWN => State.instance.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), true),
+        .KEY_UP => State.instance.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), false),
         .MOUSE_MOVE => {
-            if (state.ui_settings.is_ui_open) return;
-            const dx: f32 = event.mouse_dx * state.camera.sensitivity;
-            const dy: f32 = event.mouse_dy * state.camera.sensitivity;
+            if (State.instance.ui_settings.is_ui_open) return;
+            const dx: f32 = event.mouse_dx * State.instance.camera.sensitivity;
+            const dy: f32 = event.mouse_dy * State.instance.camera.sensitivity;
 
-            state.camera.yaw += dx;
-            state.camera.pitch -= dy;
+            State.instance.camera.yaw += dx;
+            State.instance.camera.pitch -= dy;
 
             // clamp pitch so it doesn’t flip
-            if (state.camera.pitch > 1.5) state.camera.pitch = 1.5;
-            if (state.camera.pitch < -1.5) state.camera.pitch = -1.5;
+            if (State.instance.camera.pitch > 1.5) State.instance.camera.pitch = 1.5;
+            if (State.instance.camera.pitch < -1.5) State.instance.camera.pitch = -1.5;
         },
         .MOUSE_DOWN => {
-            if (!state.ui_settings.is_imgui_open and !state.ui_settings.is_ui_open) {
-                Gun.shoot(state);
+            if (!State.instance.ui_settings.is_imgui_open and !State.instance.ui_settings.is_ui_open) {
+                Gun.shoot();
             }
         },
         else => {},

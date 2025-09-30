@@ -9,8 +9,8 @@ pub inline fn init() void {
     });
 }
 
-pub inline fn render(state: State) void {
-    if (state.ui_settings.is_imgui_open or state.ui_settings.is_ui_open) simgui.render();
+pub inline fn render() void {
+    if (State.instance.ui_settings.is_imgui_open or State.instance.ui_settings.is_ui_open) simgui.render();
 }
 
 pub inline fn handleInput(event: sapp.Event) void {
@@ -21,8 +21,8 @@ pub inline fn shutdown() void {
     simgui.shutdown();
 }
 
-pub inline fn draw(allocator: Allocator, state: *State) void {
-    const settings = state.ui_settings;
+pub inline fn draw(allocator: Allocator) void {
+    const settings = State.instance.ui_settings;
     if (settings.is_imgui_open or settings.is_ui_open) {
         // call simgui.newFrame() before any ImGui calls
         simgui.newFrame(.{
@@ -32,13 +32,13 @@ pub inline fn draw(allocator: Allocator, state: *State) void {
             .dpi_scale = sapp.dpiScale(),
         });
         if (settings.is_imgui_open) {
-            MovementInfo.draw(state);
-            CameraInfo.draw(state);
-            FrameInfo.draw(state);
+            MovementInfo.draw();
+            CameraInfo.draw();
+            FrameInfo.draw();
             ObjectInfo.draw(allocator);
         }
         if (settings.is_ui_open) {
-            SettingsMenu.draw(state);
+            SettingsMenu.draw();
         }
     }
 }

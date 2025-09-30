@@ -14,18 +14,18 @@ export fn init() void {
         .logger = .{ .func = slog.func },
     });
 
-    Cube.init(allocator, &State.instance);
-    Sphere.init(allocator, &State.instance);
+    Cube.init(allocator);
+    Sphere.init(allocator);
 
     State.instance.objects.cube_list = Cube.getListPtr();
     State.instance.objects.sphere_list = Sphere.getListPtr();
 
-    Plane.init(&State.instance);
+    Plane.init();
 
     Crosshair.init();
 
     // framebuffer clear color
-    // state.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0.25, .g = 0.5, .b = 0.75, .a = 1 } };
+    // State.instance.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0.25, .g = 0.5, .b = 0.75, .a = 1 } };
     State.instance.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0, .g = 0, .b = 0, .a = 1 } };
 
     // lock mouse
@@ -35,23 +35,23 @@ export fn init() void {
 export fn frame() void {
     State.instance.camera.updateView();
 
-    ui.draw(allocator, &State.instance);
+    ui.draw(allocator);
 
     const dt: f32 = @floatCast(sapp.frameDuration() * 60);
 
     State.instance.script_manager.update();
 
-    Movement.perFrame(dt, &State.instance);
+    Movement.perFrame(dt);
 
     sg.beginPass(.{ .action = State.instance.pass_action, .swapchain = sglue.swapchain() });
 
-    Grid.draw(State.instance);
-    Cube.draw(&State.instance);
-    Sphere.draw(&State.instance);
+    Grid.draw();
+    Cube.draw();
+    Sphere.draw();
     Crosshair.draw();
 
     // render simgui before the pass ends
-    ui.render(State.instance);
+    ui.render();
 
     sg.endPass();
     sg.commit();
@@ -62,9 +62,9 @@ export fn input(ev: ?*const sapp.Event) void {
     // _ = simgui.handleEvent(event.*);
     ui.handleInput(event.*);
 
-    Controls.handle(event.*, &State.instance);
+    Controls.handle(event.*);
 
-    Menus.handle(event.*, &State.instance);
+    Menus.handle(event.*);
 }
 
 export fn cleanup() void {

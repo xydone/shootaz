@@ -2,8 +2,7 @@ var bindings: sg.Bindings = undefined;
 var location: Vec3 = .{ .x = 0, .y = -1, .z = 0 };
 var pipeline: sg.Pipeline = undefined;
 
-pub inline fn init(state: *State) void {
-    _ = state; // autofix
+pub inline fn init() void {
     bindings.vertex_buffers[0] = sg.makeBuffer(.{
         .usage = .{},
         .data = sg.asRange(&initVertices()),
@@ -30,10 +29,10 @@ pub inline fn init(state: *State) void {
     });
 }
 
-pub inline fn draw(state: *State) void {
-    sg.applyPipeline(state.pip);
+pub inline fn draw() void {
+    sg.applyPipeline(State.instance.pip);
     sg.applyBindings(bindings);
-    sg.applyUniforms(shader.UB_vs_params, sg.asRange(&computeParams(state.*)));
+    sg.applyUniforms(shader.UB_vs_params, sg.asRange(&computeParams(State.instance.*)));
     sg.draw(0, 6, 1);
 }
 
@@ -41,15 +40,15 @@ pub fn move(move_vec: Vec3) void {
     location = location.add(move_vec);
 }
 
-fn computeParams(state: State) shader.VsParams {
+fn computeParams() shader.VsParams {
     const model = Mat4.translate(location);
 
     const aspect_ratio = sapp.widthf() / sapp.heightf();
 
-    const perspective_projection = Mat4.persp(60, aspect_ratio, 0.01, state.camera.render_distance);
+    const perspective_projection = Mat4.persp(60, aspect_ratio, 0.01, State.instance.camera.render_distance);
 
     // MVP = proj * view * model
-    return shader.VsParams{ .mvp = Mat4.mul(Mat4.mul(perspective_projection, state.camera.view), model) };
+    return shader.VsParams{ .mvp = Mat4.mul(Mat4.mul(perspective_projection, State.instance.camera.view), model) };
 }
 
 fn initVertices() [4][7]f32 {

@@ -1,9 +1,9 @@
-pub fn shoot(state: *State) void {
-    const origin = state.camera.pos;
-    const direction = state.camera.getForward();
+pub fn shoot() void {
+    const origin = State.instance.camera.pos;
+    const direction = State.instance.camera.getForward();
 
     //TODO: this is ugly
-    for (state.objects.getLists()) |list| {
+    for (State.instance.objects.getLists()) |list| {
         switch (list) {
             .cubes => |cubes| {
                 for (cubes.items, 0..) |cube, i| {
