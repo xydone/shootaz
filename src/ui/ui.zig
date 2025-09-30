@@ -35,8 +35,7 @@ pub inline fn draw(allocator: Allocator, state: *State) void {
             MovementInfo.draw(state);
             CameraInfo.draw(state);
             FrameInfo.draw(state);
-            CubeInfo.draw(allocator, state);
-            SphereInfo.draw(allocator, state);
+            ObjectInfo.draw(allocator);
         }
         if (settings.is_ui_open) {
             SettingsMenu.draw(state);
@@ -47,8 +46,7 @@ pub inline fn draw(allocator: Allocator, state: *State) void {
 // UI Components
 const CameraInfo = @import("camera_info.zig");
 const MovementInfo = @import("movement_info.zig");
-const CubeInfo = @import("cube_info.zig");
-const SphereInfo = @import("sphere_info.zig");
+const ObjectInfo = @import("object_info.zig");
 const FrameInfo = @import("frame_info.zig");
 const SettingsMenu = @import("settings_menu.zig");
 

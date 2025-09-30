@@ -44,6 +44,10 @@
             .url = "git+https://github.com/floooh/dcimgui#581c2e909c899c21923c779d4c41ea56ab93bbb4",
             .hash = "cimgui-0.1.0-44ClkQ14kwAiwcr3ioDjxvPuiWQctWrt-tIFtsfP6xmU",
         },
+        .zlua = .{
+            .url = "git+https://github.com/natecraddock/ziglua#fd89bfa2adcb35708c09c077a4b07f862569ad7d",
+            .hash = "zlua-0.1.0-hGRpC7c4BQCmk3530j_G4VLpiBdzXTSwoyAiU6ZYIJHj",
+        },
     },
     .paths = .{
         "build.zig",

@@ -1,11 +1,12 @@
 offset: Vec3,
-color: [4]f32,
-radius: f32,
+color: [4]f32 = red,
+radius: f32 = 1,
 pub const InstanceData = @This();
 
 var bindings: sg.Bindings = .{};
 var pipeline: sg.Pipeline = .{};
 var element_range: sshape.ElementRange = undefined;
+var is_buffer_dirty = false;
 
 const MAXIMUM_SPHERE_COUNT = 1024;
 
@@ -63,6 +64,7 @@ pub inline fn init(allocator: Allocator, state: *State) void {
 }
 
 pub inline fn draw(state: *State) void {
+    flush();
     const vs_params = computeVsParams(state.*);
     sg.applyPipeline(pipeline);
     sg.applyBindings(bindings);
@@ -84,7 +86,7 @@ pub fn deinit(allocator: Allocator) void {
     instance_data.deinit(allocator);
 }
 
-pub fn getPositions() []Vec3 {
+pub fn getPositions() []InstanceData {
     return instance_data.items;
 }
 
@@ -122,13 +124,22 @@ pub fn load(allocator: Allocator, file_name: []const u8) !void {
 
 pub fn insert(allocator: Allocator, instance: InstanceData) void {
     instance_data.append(allocator, instance) catch @panic("OOM");
-    sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(instance_data.items));
+    // sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(instance_data.items));
+    is_buffer_dirty = true;
 }
 
 pub fn removeIndex(i: u16) void {
     _ = instance_data.swapRemove(i);
     if (instance_data.items.len > 0) {
+        // sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(instance_data.items));
+        is_buffer_dirty = true;
+    }
+}
+
+pub fn flush() void {
+    if (is_buffer_dirty) {
         sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(instance_data.items));
+        is_buffer_dirty = false;
     }
 }
 

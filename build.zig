@@ -14,6 +14,12 @@ pub fn build(b: *Build) !void {
         .target = target,
         .optimize = optimize,
     });
+
+    const lua_dep = b.dependency("zlua", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     // Get the matching Zig module name, C header search path and C library for
     // vanilla imgui vs the imgui docking branch.
     const cimgui_conf = cimgui.getConfig(false);
@@ -29,6 +35,7 @@ pub fn build(b: *Build) !void {
 
     exe_mod.addImport("sokol", dep_sokol.module("sokol"));
     exe_mod.addImport(cimgui_conf.module_name, dep_cimgui.module(cimgui_conf.module_name));
+    exe_mod.addImport("zlua", lua_dep.module("zlua"));
 
     // extract shdc dependency from sokol dependency
     const dep_shdc = dep_sokol.builder.dependency("shdc", .{});

@@ -4,6 +4,12 @@ input_state: InputState = .{},
 movement_settings: MovementSettings = .{},
 ui_settings: UISettings = .{},
 objects: Object,
+script_manager: ScriptManager,
+
+pub var instance: @This() = .{
+    .objects = undefined,
+    .script_manager = undefined,
+};
 
 const UISettings = @import("ui/ui.zig").Settings;
 const MovementSettings = @import("movement.zig").Settings;
@@ -12,6 +18,8 @@ const InputState = @import("controls.zig").InputState;
 
 const Object = @import("components/object.zig");
 const Camera = @import("camera.zig");
+
+const ScriptManager = @import("scripting/script_manager.zig");
 
 const Vec3 = @import("math.zig").Vec3;
 const Mat4 = @import("math.zig").Mat4;

@@ -27,7 +27,6 @@ pub fn shoot(state: *State) void {
             },
         }
     }
-    std.debug.print("----------------------\n", .{});
 }
 
 const Sphere = @import("../components/sphere.zig");

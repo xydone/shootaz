@@ -1,12 +1,9 @@
-var state: State = .{
-    .objects = undefined,
-};
-
 var floor_bindings: sg.Bindings = undefined;
 
 const allocator = std.heap.smp_allocator;
-
 export fn init() void {
+    State.instance.script_manager = ScriptManager.init(allocator);
+
     sg.setup(.{
         .environment = sglue.environment(),
         .logger = .{ .func = slog.func },
@@ -17,42 +14,44 @@ export fn init() void {
         .logger = .{ .func = slog.func },
     });
 
-    Cube.init(allocator, &state);
-    Sphere.init(allocator, &state);
+    Cube.init(allocator, &State.instance);
+    Sphere.init(allocator, &State.instance);
 
-    state.objects.cube_list = Cube.getListPtr();
-    state.objects.sphere_list = Sphere.getListPtr();
+    State.instance.objects.cube_list = Cube.getListPtr();
+    State.instance.objects.sphere_list = Sphere.getListPtr();
 
-    Plane.init(&state);
+    Plane.init(&State.instance);
 
     Crosshair.init();
 
     // framebuffer clear color
     // state.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0.25, .g = 0.5, .b = 0.75, .a = 1 } };
-    state.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0, .g = 0, .b = 0, .a = 1 } };
+    State.instance.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0, .g = 0, .b = 0, .a = 1 } };
 
     // lock mouse
     sapp.lockMouse(true);
 }
 
 export fn frame() void {
-    state.camera.updateView();
+    State.instance.camera.updateView();
 
-    ui.draw(allocator, &state);
+    ui.draw(allocator, &State.instance);
 
     const dt: f32 = @floatCast(sapp.frameDuration() * 60);
 
-    Movement.perFrame(dt, &state);
+    State.instance.script_manager.update();
 
-    sg.beginPass(.{ .action = state.pass_action, .swapchain = sglue.swapchain() });
+    Movement.perFrame(dt, &State.instance);
 
-    Grid.draw(state);
-    Cube.draw(&state);
-    Sphere.draw(&state);
+    sg.beginPass(.{ .action = State.instance.pass_action, .swapchain = sglue.swapchain() });
+
+    Grid.draw(State.instance);
+    Cube.draw(&State.instance);
+    Sphere.draw(&State.instance);
     Crosshair.draw();
 
     // render simgui before the pass ends
-    ui.render(state);
+    ui.render(State.instance);
 
     sg.endPass();
     sg.commit();
@@ -63,13 +62,14 @@ export fn input(ev: ?*const sapp.Event) void {
     // _ = simgui.handleEvent(event.*);
     ui.handleInput(event.*);
 
-    Controls.handle(event.*, &state);
+    Controls.handle(event.*, &State.instance);
 
-    Menus.handle(event.*, &state);
+    Menus.handle(event.*, &State.instance);
 }
 
 export fn cleanup() void {
     Cube.deinit(allocator);
+    State.instance.script_manager.deinit();
     ui.shutdown();
     sgl.shutdown();
     sg.shutdown();
@@ -89,6 +89,9 @@ pub fn main() void {
     });
 }
 
+const ScriptManager = @import("scripting/script_manager.zig");
+
+const Object = @import("components/object.zig");
 const Grid = @import("components/grid.zig");
 const Plane = @import("components/plane.zig");
 const Cube = @import("components/cube.zig");

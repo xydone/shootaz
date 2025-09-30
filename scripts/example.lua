@@ -1,0 +1,29 @@
+local MAX_SPHERES = 3
+
+local SPAWN_AREA = {
+    x_min = -5, x_max = 5,
+    y_min = 0,  y_max = 10,
+    z_min = -50, z_max = -50,
+}
+
+local function random_range(min, max)
+    return math.random() * (max - min) + min
+end
+
+local function spawn_sphere()
+    local x = random_range(SPAWN_AREA.x_min, SPAWN_AREA.x_max)
+    local y = random_range(SPAWN_AREA.y_min, SPAWN_AREA.y_max)
+    local z = random_range(SPAWN_AREA.z_min, SPAWN_AREA.z_max)
+    
+    Game.create_sphere(x, y, z)
+end
+
+function update()
+    local current_spheres = Game.get_spheres()  
+    local count = #current_spheres
+
+    while count < MAX_SPHERES do
+        spawn_sphere()
+        count = count + 1
+    end
+end
