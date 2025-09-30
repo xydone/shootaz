@@ -15,13 +15,16 @@ var crosshair_data = std.ArrayList(Data).empty;
 var is_buffer_dirty = true;
 
 pub fn init(allocator: Allocator) void {
-    crosshair_data.appendSlice(allocator, &.{
-        .{ .pos = .{ -CROSSHAIR_SIZE, 0.0 }, .color = .{ 1, 1, 1, 1 } },
-        .{ .pos = .{ CROSSHAIR_SIZE, 0.0 }, .color = .{ 1, 1, 1, 1 } },
-        // vertical
-        .{ .pos = .{ 0.0, -CROSSHAIR_SIZE }, .color = .{ 1, 1, 1, 1 } },
-        .{ .pos = .{ 0.0, CROSSHAIR_SIZE }, .color = .{ 1, 1, 1, 1 } },
-    }) catch @panic("OOM");
+    State.instance.script_manager.doFile(allocator, "crosshair") catch {
+        // default crosshair if file is missing
+        crosshair_data.appendSlice(allocator, &.{
+            .{ .pos = .{ -CROSSHAIR_SIZE, 0.0 }, .color = .{ 1, 1, 1, 1 } },
+            .{ .pos = .{ CROSSHAIR_SIZE, 0.0 }, .color = .{ 1, 1, 1, 1 } },
+            // vertical
+            .{ .pos = .{ 0.0, -CROSSHAIR_SIZE }, .color = .{ 1, 1, 1, 1 } },
+            .{ .pos = .{ 0.0, CROSSHAIR_SIZE }, .color = .{ 1, 1, 1, 1 } },
+        }) catch @panic("OOM");
+    };
 
     vbuf = sg.makeBuffer(.{
         .usage = .{ .dynamic_update = true },
@@ -56,9 +59,9 @@ pub inline fn draw() void {
 
 pub fn set(allocator: Allocator, crosshair_vertices: []Data) error{OddVertexCount}!void {
     if (crosshair_vertices.len % 2 != 0) return error.OddVertexCount;
+    is_buffer_dirty = true;
     crosshair_data.clearAndFree(allocator);
     crosshair_data.appendSlice(allocator, crosshair_vertices) catch @panic("OOM");
-    is_buffer_dirty = true;
 }
 
 pub fn flush() void {
@@ -67,6 +70,8 @@ pub fn flush() void {
         is_buffer_dirty = false;
     }
 }
+
+const State = @import("../state.zig");
 
 const shader = @import("../shaders/crosshair.zig");
 

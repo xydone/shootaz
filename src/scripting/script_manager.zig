@@ -9,8 +9,6 @@ pub fn init(allocator: std.mem.Allocator) LuaSetup {
     script_manager.lua_instance.openLibs();
     script_manager.registerFunctions();
 
-    script_manager.doFile(allocator, "crosshair") catch {};
-
     return script_manager;
 }
 

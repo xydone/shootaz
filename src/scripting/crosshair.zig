@@ -18,30 +18,36 @@ pub fn lua_set_crosshair(lua: *Lua) c_int {
             continue;
         }
 
-        _ = lua.rawGetIndex(-1, 1);
-        if (!lua.isNumber(-1)) {
+        const x = getNumberAt(lua, -1, 1);
+        const y = getNumberAt(lua, -1, 2);
+
+        _ = lua.rawGetIndex(-1, 3);
+        if (!lua.isTable(-1)) {
             lua.pop(2);
             continue;
         }
-        const x = lua.toNumber(-1) catch @panic("toNumber() failed");
+        const r = getNumberAt(lua, -1, 1);
+        const g = getNumberAt(lua, -1, 2);
+        const b = getNumberAt(lua, -1, 3);
+        const a = getNumberAt(lua, -1, 4);
+
         lua.pop(1);
 
-        _ = lua.rawGetIndex(-1, 2);
-        if (!lua.isNumber(-1)) {
-            lua.pop(2);
-            continue;
-        }
-        const y = lua.toNumber(-1) catch @panic("toNumber() failed");
-        lua.pop(1);
-
-        data.append(lua.allocator(), .{ .pos = .{ @floatCast(x * aspect), @floatCast(y) }, .color = .{ 1, 1, 1, 1 } }) catch @panic("OOM");
+        data.append(lua.allocator(), .{ .pos = .{ x, y * aspect }, .color = .{ r, g, b, a } }) catch @panic("OOM");
 
         lua.pop(1);
     }
 
-    Crosshair.set(lua.allocator(), data.items) catch @panic("OOM");
+    Crosshair.set(lua.allocator(), data.items) catch {};
 
     return 0;
+}
+
+inline fn getNumberAt(lua: *Lua, index: i32, field: i32) f32 {
+    _ = lua.rawGetIndex(index, field);
+    defer lua.pop(1);
+
+    return @floatCast(lua.toNumber(-1) catch @panic("toNumber() failed"));
 }
 
 pub inline fn register(lua_instance: *Lua) void {
