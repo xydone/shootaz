@@ -14,19 +14,18 @@ pub inline fn handle(event: Event) void {
             if (State.instance.camera.pitch > 1.5) State.instance.camera.pitch = 1.5;
             if (State.instance.camera.pitch < -1.5) State.instance.camera.pitch = -1.5;
         },
-        .MOUSE_DOWN => {
-            if (!State.instance.ui_settings.is_imgui_open and !State.instance.ui_settings.is_ui_open) {
-                Gun.shoot();
-            }
-        },
+        .MOUSE_UP => State.instance.input_state.mouse_buttons.setValue(@intCast(@intFromEnum(event.mouse_button)), false),
+        .MOUSE_DOWN => State.instance.input_state.mouse_buttons.setValue(@intCast(@intFromEnum(event.mouse_button)), true),
         else => {},
     }
 }
 
 pub const InputState = struct {
     const KeyBitSet = std.bit_set.IntegerBitSet(@as(u16, @intFromEnum(LAST_KEY_IN_KEYCODE_LIST)) + 1);
+    const MouseBitSet = std.bit_set.IntegerBitSet(@as(u16, @intFromEnum(LAST_MOUSE_BUTTON_IN_LIST)) + 1);
 
-    keys: KeyBitSet = KeyBitSet.initEmpty(),
+    keys: KeyBitSet = .initEmpty(),
+    mouse_buttons: MouseBitSet = .initEmpty(),
 
     pub inline fn isKeyPressed(input: InputState, key: Keycode) bool {
         return input.keys.isSet(@intCast(@intFromEnum(key)));
@@ -35,14 +34,24 @@ pub const InputState = struct {
     pub inline fn isKeyReleased(input: InputState, key: Keycode) bool {
         return !input.isKeyPressed(key);
     }
+
+    pub inline fn isMouseButtonPressed(input: InputState, button: Mousebutton) bool {
+        return input.mouse_buttons.isSet(@intCast(@intFromEnum(button)));
+    }
+
+    pub inline fn isMouseButtonReleased(input: InputState, button: Mousebutton) bool {
+        return !input.isMouseButtonPressed(button);
+    }
 };
 
 const LAST_KEY_IN_KEYCODE_LIST = Keycode.MENU;
+const LAST_MOUSE_BUTTON_IN_LIST = Mousebutton.MIDDLE;
 
-const Gun = @import("weapons/gun.zig");
+const Gun = @import("player/gun.zig");
 const State = @import("state.zig");
 
 const Event = sapp.Event;
+const Mousebutton = sapp.Mousebutton;
 const Keycode = sapp.Keycode;
 const sapp = sokol.app;
 const sokol = @import("sokol");

@@ -42,6 +42,7 @@ export fn frame() void {
     State.instance.script_manager.update();
 
     Movement.perFrame(dt);
+    Player.perFrame(dt);
 
     sg.beginPass(.{ .action = State.instance.pass_action, .swapchain = sglue.swapchain() });
 
@@ -104,6 +105,7 @@ const Controls = @import("controls.zig");
 
 const Camera = @import("camera.zig");
 
+const Player = @import("player/player.zig");
 const Movement = @import("movement.zig");
 
 const Vec3 = @import("math.zig").Vec3;

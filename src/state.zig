@@ -1,10 +1,11 @@
 pass_action: sg.PassAction = .{},
 camera: Camera = .{},
 input_state: InputState = .{},
-movement_settings: MovementSettings = .{},
+settings: Settings = .{},
 ui_settings: UISettings = .{},
 objects: Object,
 script_manager: ScriptManager,
+player: Player = .{},
 
 pub var instance: @This() = .{
     .objects = undefined,
@@ -13,11 +14,14 @@ pub var instance: @This() = .{
 
 const UISettings = @import("ui/ui.zig").Settings;
 const MovementSettings = @import("movement.zig").Settings;
+const Settings = @import("settings.zig");
 
 const InputState = @import("controls.zig").InputState;
 
 const Object = @import("components/object.zig");
 const Camera = @import("camera.zig");
+
+const Player = @import("player/player.zig");
 
 const ScriptManager = @import("scripting/script_manager.zig");
 

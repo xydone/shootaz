@@ -7,7 +7,7 @@ pub const Settings = struct {
     velocity: Vec3 = Vec3.zero(),
 };
 pub inline fn perFrame(dt: f32) void {
-    const settings = State.instance.movement_settings;
+    const settings = State.instance.settings.movement_settings;
     if (State.instance.ui_settings.is_ui_open) return;
     var direction = Vec3.zero();
     const forward = Vec3.norm(.{
@@ -32,26 +32,26 @@ pub inline fn perFrame(dt: f32) void {
         }
     }
 
-    State.instance.movement_settings.direction = direction;
+    State.instance.settings.movement_settings.direction = direction;
 
     if (Vec3.len(settings.direction) > 0) {
         const dir = Vec3.norm(settings.direction);
-        State.instance.movement_settings.velocity = Vec3.add(State.instance.movement_settings.velocity, Vec3.mul(dir, settings.accel * dt));
+        State.instance.settings.movement_settings.velocity = Vec3.add(State.instance.settings.movement_settings.velocity, Vec3.mul(dir, settings.accel * dt));
     } else {
-        const speed = Vec3.len(State.instance.movement_settings.velocity);
+        const speed = Vec3.len(State.instance.settings.movement_settings.velocity);
         if (speed > 0) {
             const drop = settings.friction * dt;
             const new_speed = if (speed > drop) speed - drop else 0;
-            State.instance.movement_settings.velocity = Vec3.mul(Vec3.norm(State.instance.movement_settings.velocity), new_speed);
+            State.instance.settings.movement_settings.velocity = Vec3.mul(Vec3.norm(State.instance.settings.movement_settings.velocity), new_speed);
         }
     }
 
-    const vel_len = Vec3.len(State.instance.movement_settings.velocity);
+    const vel_len = Vec3.len(State.instance.settings.movement_settings.velocity);
     if (vel_len > settings.max_speed) {
-        State.instance.movement_settings.velocity = Vec3.mul(Vec3.norm(State.instance.movement_settings.velocity), settings.max_speed);
+        State.instance.settings.movement_settings.velocity = Vec3.mul(Vec3.norm(State.instance.settings.movement_settings.velocity), settings.max_speed);
     }
 
-    State.instance.camera.pos = Vec3.add(State.instance.camera.pos, Vec3.mul(State.instance.movement_settings.velocity, dt));
+    State.instance.camera.pos = Vec3.add(State.instance.camera.pos, Vec3.mul(State.instance.settings.movement_settings.velocity, dt));
 
     var front: Vec3 = .{
         .x = @cos(State.instance.camera.yaw) * @cos(State.instance.camera.pitch),
