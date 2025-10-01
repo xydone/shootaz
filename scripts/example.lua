@@ -1,3 +1,5 @@
+Player.set_weapon(3, 3, FIRING_MODE_SEMI, 0.1)
+
 local MAX_SPHERES = 3
 
 local SPAWN_AREA = {
@@ -5,6 +7,7 @@ local SPAWN_AREA = {
     y_min = 0,  y_max = 10,
     z_min = -50, z_max = -50,
 }
+
 
 local function random_range(min, max)
     return math.random() * (max - min) + min
@@ -21,7 +24,7 @@ end
 function update()
     local current_spheres = Object.get_spheres()  
     local count = #current_spheres
-
+    
     while count < MAX_SPHERES do
         spawn_sphere()
         count = count + 1

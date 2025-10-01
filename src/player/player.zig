@@ -1,7 +1,7 @@
 active_weapon: Gun = .{
     .ammo = 3,
     .replenish_ammo = 3,
-    .firing_mode = Gun.FiringMode{ .semi = .{} },
+    .firing_mode = Gun.FiringModeData{ .semi = .{} },
     .fire_rate = 0.1,
 },
 

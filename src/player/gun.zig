@@ -2,11 +2,13 @@ ammo: u16,
 cooldown: f32 = 0,
 /// amount of ammo that will be replenished on hit or on reload
 replenish_ammo: u16,
-firing_mode: FiringMode,
+firing_mode: FiringModeData,
 /// seconds between shots
 fire_rate: f32,
 
-pub const FiringMode = union(enum) {
+pub const FiringMode = enum { automatic, semi };
+
+pub const FiringModeData = union(FiringMode) {
     automatic: void,
     semi: struct {
         has_fired_this_click: bool = false,
