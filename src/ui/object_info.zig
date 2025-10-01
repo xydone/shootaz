@@ -5,9 +5,13 @@ var instance: Sphere.InstanceData = .{
 };
 var buf: [20]u8 = std.mem.zeroes([20]u8);
 
+var show_window = true;
+
 pub inline fn draw(allocator: Allocator) void {
+    if (show_window == false) return;
     defer ig.igEnd();
-    if (ig.igBegin("Object Info", &State.instance.ui_settings.show_window, ig.ImGuiWindowFlags_AlwaysAutoResize)) {
+
+    if (ig.igBegin("Object Info", &show_window, ig.ImGuiWindowFlags_AlwaysAutoResize)) {
         _ = ig.igInputText("Name", &buf, 20, 0);
         const name = std.mem.sliceTo(&buf, 0);
 

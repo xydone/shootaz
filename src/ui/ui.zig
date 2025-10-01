@@ -1,7 +1,6 @@
 pub const Settings = struct {
     is_ui_open: bool = false,
     is_imgui_open: bool = false,
-    show_window: bool = true,
 };
 pub inline fn init() void {
     simgui.setup(.{
@@ -10,7 +9,7 @@ pub inline fn init() void {
 }
 
 pub inline fn render() void {
-    if (State.instance.ui_settings.is_imgui_open or State.instance.ui_settings.is_ui_open) simgui.render();
+    simgui.render();
 }
 
 pub inline fn handleInput(event: sapp.Event) void {
@@ -23,18 +22,18 @@ pub inline fn shutdown() void {
 
 pub inline fn draw(allocator: Allocator) void {
     const settings = State.instance.ui_settings;
+    // call simgui.newFrame() before any ImGui calls
+    simgui.newFrame(.{
+        .width = sapp.width(),
+        .height = sapp.height(),
+        .delta_time = sapp.frameDuration(),
+        .dpi_scale = sapp.dpiScale(),
+    });
+    FrameInfo.draw();
     if (settings.is_imgui_open or settings.is_ui_open) {
-        // call simgui.newFrame() before any ImGui calls
-        simgui.newFrame(.{
-            .width = sapp.width(),
-            .height = sapp.height(),
-            .delta_time = sapp.frameDuration(),
-            .dpi_scale = sapp.dpiScale(),
-        });
         if (settings.is_imgui_open) {
             MovementInfo.draw();
             CameraInfo.draw();
-            FrameInfo.draw();
             ObjectInfo.draw(allocator);
         }
         if (settings.is_ui_open) {

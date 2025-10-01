@@ -1,8 +1,11 @@
+var show_window = true;
 pub inline fn draw() void {
+    if (show_window == false) return;
     defer ig.igEnd();
+
     const clrs = State.instance.pass_action.colors[0].clear_value;
     var cast: [4]f32 = .{ clrs.r, clrs.g, clrs.b, clrs.a };
-    if (ig.igBegin("Movement settings", &State.instance.ui_settings.show_window, ig.ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ig.igBegin("Movement settings", &show_window, ig.ImGuiWindowFlags_AlwaysAutoResize)) {
         _ = ig.igText("Current speed: %f", Vec3.len(State.instance.movement_settings.velocity));
         _ = ig.igInputFloat("Acceleration", &State.instance.movement_settings.accel);
         _ = ig.igInputFloat("Friction", &State.instance.movement_settings.friction);

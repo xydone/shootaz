@@ -1,6 +1,7 @@
 pub inline fn draw() void {
     defer ig.igEnd();
-    if (ig.igBegin("Settings", &State.instance.ui_settings.show_window, ig.ImGuiWindowFlags_AlwaysAutoResize)) {
+
+    if (ig.igBegin("Settings", null, ig.ImGuiWindowFlags_AlwaysAutoResize)) {
         if (ig.igButton("Quit")) {
             sapp.requestQuit();
         }
