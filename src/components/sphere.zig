@@ -1,6 +1,6 @@
 offset: Vec3,
-color: [4]f32 = red,
-radius: f32 = 1,
+color: [4]f32,
+radius: f32,
 pub const InstanceData = @This();
 
 var bindings: sg.Bindings = .{};
@@ -27,7 +27,9 @@ pub inline fn init(allocator: Allocator) void {
             l.attrs[shader.ATTR_sphere_instance_offset].buffer_index = 1;
             l.attrs[shader.ATTR_sphere_instance_offset].format = .FLOAT3;
             l.attrs[shader.ATTR_sphere_instance_color].buffer_index = 1;
-            l.attrs[shader.ATTR_sphere_instance_color].format = .FLOAT3;
+            l.attrs[shader.ATTR_sphere_instance_color].format = .FLOAT4;
+            l.attrs[shader.ATTR_sphere_instance_radius].buffer_index = 1;
+            l.attrs[shader.ATTR_sphere_instance_radius].format = .FLOAT;
 
             break :init l;
         },

@@ -1,13 +1,18 @@
 pub fn lua_create_sphere(lua: *Lua) c_int {
-    if (lua.getTop() != 3) {
-        std.debug.print("create_sphere: expected 1 argument\n", .{});
+    if (lua.getTop() != 4) {
+        std.debug.print("create_sphere: expected 4 arguments\n", .{});
         return 0;
     }
 
     const x = lua.toNumber(1) catch return 0;
     const y = lua.toNumber(2) catch return 0;
     const z = lua.toNumber(3) catch return 0;
-    Sphere.insert(lua.allocator(), .{ .offset = .{ .x = @floatCast(x), .y = @floatCast(y), .z = @floatCast(z) } });
+    const radius: f32 = @floatCast(lua.toNumber(4) catch return 0);
+    Sphere.insert(lua.allocator(), .{
+        .offset = .{ .x = @floatCast(x), .y = @floatCast(y), .z = @floatCast(z) },
+        .radius = radius,
+        .color = red,
+    });
     return 1;
 }
 
@@ -42,6 +47,8 @@ pub inline fn register(lua_instance: *Lua) void {
 
     lua_instance.setGlobal("Object");
 }
+
+const red = @import("../colors.zig").red;
 
 const Lua = zlua.Lua;
 const zlua = @import("zlua");

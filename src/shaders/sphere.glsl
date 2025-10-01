@@ -9,11 +9,12 @@ layout(binding = 0) uniform vs_params {
 in vec4 position;
 in vec3 instance_offset;
 in vec4 instance_color;
+in float instance_radius;
 
 out vec4 color;
 
 void main() {
-    gl_Position = mvp * (position + vec4(instance_offset, 0.0));
+    gl_Position = mvp * (vec4(position.xyz * instance_radius, 1.0) + vec4(instance_offset, 0.0));
     color = instance_color;
 }
 @end

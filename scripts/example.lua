@@ -2,6 +2,8 @@ Player.set_weapon(3, 3, FIRING_MODE_SEMI, 0.1)
 
 local MAX_SPHERES = 3
 
+local RADIUS = 0.5
+
 local SPAWN_AREA = {
     x_min = -5, x_max = 5,
     y_min = 0,  y_max = 10,
@@ -18,7 +20,7 @@ local function spawn_sphere()
     local y = random_range(SPAWN_AREA.y_min, SPAWN_AREA.y_max)
     local z = random_range(SPAWN_AREA.z_min, SPAWN_AREA.z_max)
     
-    Object.create_sphere(x, y, z)
+    Object.create_sphere(x, y, z, RADIUS)
 end
 
 function update()
