@@ -1,3 +1,5 @@
+MAX_RUNTIME = 5
+
 Player.set_weapon(3, 3, FIRING_MODE_SEMI, 0.1)
 
 local MAX_SPHERES = 3
@@ -31,4 +33,9 @@ function update()
         spawn_sphere()
         count = count + 1
     end
+end
+
+function onTimerEnd()
+    -- TODO: destroy existing spheres
+    print("Timer ended!")
 end

@@ -1,11 +1,48 @@
 lua_instance: *Lua,
 is_update_script_running: bool = false,
+timer: Timer,
+
+const Timer = struct {
+    is_active: bool = false,
+    inner_timer: std.time.Timer,
+    /// nanoseconds
+    duration: u64,
+
+    pub fn start(self: *@This(), duration: u64) void {
+        self.inner_timer.reset();
+        self.duration = duration;
+        self.is_active = true;
+    }
+
+    pub fn check(self: *@This()) bool {
+        const timer_ended = self.inner_timer.read() >= self.duration;
+
+        if (timer_ended) self.is_active = false;
+
+        return timer_ended;
+    }
+
+    /// returns seconds
+    pub fn remaining(self: *@This()) f64 {
+        if (self.is_active == false) return 0;
+        const elapsed: f64 = @floatFromInt(self.inner_timer.read());
+        const duration: f64 = @floatFromInt(self.duration);
+        const remainder = duration - elapsed;
+        return if (remainder < 0) 0 else remainder / 1_000_000_000;
+    }
+};
 
 const LuaSetup = @This();
 
 pub fn init(allocator: std.mem.Allocator) LuaSetup {
     const lua_instance = Lua.init(allocator) catch @panic("Cannot init Lua");
-    var script_manager: LuaSetup = .{ .lua_instance = lua_instance };
+    var script_manager: LuaSetup = .{
+        .lua_instance = lua_instance,
+        .timer = .{
+            .inner_timer = std.time.Timer.start() catch @panic("Timer is not supported"),
+            .duration = 0,
+        },
+    };
     script_manager.lua_instance.openLibs();
     script_manager.registerFunctions();
 
@@ -30,11 +67,35 @@ pub fn doFile(self: *LuaSetup, allocator: Allocator, file_name: []const u8) erro
 
         return error.FileNotFound;
     };
+
+    _ = self.lua_instance.getGlobal("MAX_RUNTIME") catch return;
+    const duration: u64 = @intFromFloat(self.lua_instance.toNumber(-1) catch return);
+
+    self.timer.start(duration * std.time.ns_per_s);
 }
 
 pub fn update(self: *LuaSetup) void {
     if (self.is_update_script_running == false) return;
-    _ = self.lua_instance.getGlobal("update") catch @panic("getGlobal failed");
+
+    if (self.timer.is_active == false) {
+        //TODO: the script is still loaded into the lua state
+        self.is_update_script_running = false;
+        return;
+    }
+
+    if (self.timer.check()) {
+        self.timerCallback();
+    }
+    _ = self.lua_instance.getGlobal("update") catch return;
+    self.lua_instance.protectedCall(.{}) catch @panic("pcall failed");
+}
+
+pub fn startTimer(self: *LuaSetup, duration: f64) void {
+    self.timer.start(duration);
+}
+
+pub fn timerCallback(self: *LuaSetup) void {
+    _ = self.lua_instance.getGlobal("onTimerEnd") catch return;
     self.lua_instance.protectedCall(.{}) catch @panic("pcall failed");
 }
 
