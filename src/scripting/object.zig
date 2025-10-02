@@ -22,7 +22,7 @@ pub fn lua_get_spheres(lua: *Lua) c_int {
     lua.newTable();
 
     for (spheres, 0..) |s, i| {
-        lua.newTable(); // table for this sphere
+        lua.newTable();
         lua.pushNumber(@floatCast(s.offset.x));
         lua.setField(-2, "x");
         lua.pushNumber(@floatCast(s.offset.y));
@@ -36,16 +36,26 @@ pub fn lua_get_spheres(lua: *Lua) c_int {
     return 1;
 }
 
-pub inline fn register(lua_instance: *Lua) void {
-    lua_instance.newTable();
+pub fn lua_clear_spheres(lua: *Lua) c_int {
+    _ = lua; // autofix
+    Sphere.clear();
 
-    lua_instance.pushFunction(zlua.wrap(lua_create_sphere));
-    lua_instance.setField(-2, "create_sphere");
+    return 0;
+}
 
-    lua_instance.pushFunction(zlua.wrap(lua_get_spheres));
-    lua_instance.setField(-2, "get_spheres");
+pub inline fn register(lua: *Lua) void {
+    lua.newTable();
 
-    lua_instance.setGlobal("Object");
+    lua.pushFunction(zlua.wrap(lua_create_sphere));
+    lua.setField(-2, "create_sphere");
+
+    lua.pushFunction(zlua.wrap(lua_clear_spheres));
+    lua.setField(-2, "clear_spheres");
+
+    lua.pushFunction(zlua.wrap(lua_get_spheres));
+    lua.setField(-2, "get_spheres");
+
+    lua.setGlobal("Object");
 }
 
 const red = @import("../colors.zig").red;

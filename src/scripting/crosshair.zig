@@ -50,13 +50,13 @@ inline fn getNumberAt(lua: *Lua, index: i32, field: i32) f32 {
     return @floatCast(lua.toNumber(-1) catch @panic("toNumber() failed"));
 }
 
-pub inline fn register(lua_instance: *Lua) void {
-    lua_instance.newTable();
+pub inline fn register(lua: *Lua) void {
+    lua.newTable();
 
-    lua_instance.pushFunction(zlua.wrap(lua_set_crosshair));
-    lua_instance.setField(-2, "set_crosshair");
+    lua.pushFunction(zlua.wrap(lua_set_crosshair));
+    lua.setField(-2, "set_crosshair");
 
-    lua_instance.setGlobal("Crosshair");
+    lua.setGlobal("Crosshair");
 }
 
 const Crosshair = @import("../components/crosshair.zig");

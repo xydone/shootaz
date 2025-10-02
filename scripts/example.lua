@@ -36,6 +36,5 @@ function update()
 end
 
 function onTimerEnd()
-    -- TODO: destroy existing spheres
-    print("Timer ended!")
+    Object.clear_spheres()
 end
