@@ -9,6 +9,8 @@ Player.set_weapon(3, 3, FIRING_MODE_SEMI, 0.1)
 
 local MAX_SPHERES = 3
 
+Object.random_init()
+
 local function random_range(min, max)
     return math.random() * (max - min) + min
 end

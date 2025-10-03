@@ -36,19 +36,31 @@ pub fn lua_get_spheres(lua: *Lua) c_int {
     return 1;
 }
 
-pub fn lua_generate_random_sphere(lua: *Lua) c_int {
-    var seed: u64 = undefined;
-    std.posix.getrandom(std.mem.asBytes(&seed)) catch @panic("Couldn't generate seed.");
-
+pub fn lua_random_init(lua: *Lua) c_int {
+    const seed = blk: {
+        if (!lua.isString(1)) {
+            var seed: u64 = undefined;
+            std.posix.getrandom(std.mem.asBytes(&seed)) catch return 0;
+            break :blk seed;
+        } else break :blk std.fmt.parseInt(u64, lua.toString(1) catch return 0, 10) catch return 0;
+    };
     State.instance.player.stats.seed = seed;
-    var prng = std.Random.DefaultPrng.init(seed);
+    State.instance.script_manager.prng.seed(seed);
+    return 0;
+}
 
-    const x_range = getRange(lua, "X") catch @panic("X is not a variable");
-    const y_range = getRange(lua, "Y") catch @panic("Y is not a variable");
-    const z_range = getRange(lua, "Z") catch @panic("Z is not a variable");
+pub fn lua_generate_random_sphere(lua: *Lua) c_int {
+    generateRandomSphere(lua) catch return 0;
+    return 0;
+}
+
+fn generateRandomSphere(lua: *Lua) error{ MissingAxis, RadiusNotNumber, MissingRadius }!void {
+    const x_range = getRange(lua, "X") catch return error.MissingAxis;
+    const y_range = getRange(lua, "Y") catch return error.MissingAxis;
+    const z_range = getRange(lua, "Z") catch return error.MissingAxis;
     const radius = blk: {
-        _ = lua.getGlobal("RADIUS") catch @panic("getGlobal() failed");
-        const radius: f32 = lua.toNumeric(f32, -1) catch @panic("toNumeric() failed");
+        _ = lua.getGlobal("RADIUS") catch return error.MissingRadius;
+        const radius: f32 = lua.toNumeric(f32, -1) catch return error.RadiusNotNumber;
 
         break :blk radius;
     };
@@ -60,7 +72,7 @@ pub fn lua_generate_random_sphere(lua: *Lua) c_int {
         const range = ranges[@intFromEnum(axis)];
         const value = switch (range) {
             .single_value => |value| value,
-            .range => |value| prng.random().intRangeAtMost(i16, value.min, value.max),
+            .range => |value| State.instance.script_manager.prng.random().intRangeAtMost(i16, value.min, value.max),
         };
 
         switch (axis) {
@@ -75,7 +87,6 @@ pub fn lua_generate_random_sphere(lua: *Lua) c_int {
         .radius = radius,
         .color = red,
     });
-    return 0;
 }
 
 const Axis = enum { x, y, z };
@@ -84,17 +95,17 @@ const Range = union(enum) {
     single_value: i16,
     range: struct { min: i16, max: i16 },
 };
-fn getRange(lua: *Lua, variable: [:0]const u8) error{NoVariable}!Range {
+fn getRange(lua: *Lua, variable: [:0]const u8) error{ NoVariable, NumberNotInteger }!Range {
     const lua_variable = lua.getGlobal(variable) catch return error.NoVariable;
     defer lua.pop(1);
     return switch (lua_variable) {
-        .number => Range{ .single_value = @intCast(lua.toInteger(-1) catch @panic("toInteger() failed")) },
+        .number => Range{ .single_value = @intCast(lua.toInteger(-1) catch return error.NumberNotInteger) },
         .table => {
             _ = lua.getField(-1, "min");
-            const min: i16 = @intCast(lua.toInteger(-1) catch @panic("toInteger() failed"));
+            const min: i16 = @intCast(lua.toInteger(-1) catch return error.NumberNotInteger);
             lua.pop(1);
             _ = lua.getField(-1, "max");
-            const max: i16 = @intCast(lua.toInteger(-1) catch @panic("toInteger() failed"));
+            const max: i16 = @intCast(lua.toInteger(-1) catch return error.NumberNotInteger);
             lua.pop(1);
 
             return Range{ .range = .{ .min = min, .max = max } };
@@ -112,6 +123,9 @@ pub fn lua_clear_spheres(lua: *Lua) c_int {
 
 pub inline fn register(lua: *Lua) void {
     lua.newTable();
+
+    lua.pushFunction(zlua.wrap(lua_random_init));
+    lua.setField(-2, "random_init");
 
     lua.pushFunction(zlua.wrap(lua_generate_random_sphere));
     lua.setField(-2, "generate_random_sphere");

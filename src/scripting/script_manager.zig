@@ -2,6 +2,7 @@ lua: *Lua,
 is_update_script_running: bool = false,
 timer: Timer,
 script_name: ?[]const u8 = null,
+prng: std.Random.DefaultPrng,
 
 const Timer = struct {
     is_active: bool = false,
@@ -37,12 +38,15 @@ const LuaSetup = @This();
 
 pub fn init(allocator: std.mem.Allocator) LuaSetup {
     const lua = Lua.init(allocator) catch @panic("Cannot init Lua");
+    var seed: u64 = undefined;
+    std.posix.getrandom(std.mem.asBytes(&seed)) catch @panic("Couldn't generate seed.");
     var script_manager: LuaSetup = .{
         .lua = lua,
         .timer = .{
             .inner_timer = std.time.Timer.start() catch @panic("Timer is not supported"),
             .duration = 0,
         },
+        .prng = .init(seed),
     };
     script_manager.lua.openLibs();
     script_manager.registerFunctions();
