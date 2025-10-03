@@ -10,7 +10,7 @@ pub inline fn draw() void {
     );
 
     if (ig.igBegin("Ammo", null, ig.ImGuiWindowFlags_AlwaysAutoResize | ig.ImGuiWindowFlags_NoInputs | ig.ImGuiWindowFlags_NoFocusOnAppearing | ig.ImGuiWindowFlags_NoTitleBar)) {
-        ig.igText("Ammo: %d | Time left: %.1f", State.instance.player.active_weapon.ammo, State.instance.script_manager.timer.remaining());
+        ig.igText("Ammo: %d", State.instance.player.active_weapon.ammo);
     }
 }
 const State = @import("../state.zig");
