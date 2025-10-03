@@ -15,9 +15,14 @@ pub const FiringModeData = union(FiringMode) {
     },
 };
 
-pub fn shoot(self: *@This()) void {
-    // dont allow shooting if we dont have ammo
-    if (self.ammo == 0) return;
+pub fn canShoot(self: @This()) bool {
+    return self.ammo != 0;
+}
+
+/// Returns if shot is a hit
+/// Asserts that there is enough ammo
+pub fn shoot(self: *@This()) bool {
+    std.debug.assert(self.ammo != 0);
 
     self.cooldown = self.fire_rate;
 
@@ -27,32 +32,37 @@ pub fn shoot(self: *@This()) void {
     self.ammo -|= 1;
 
     //TODO: this is ugly
-    for (State.instance.objects.getLists()) |list| {
-        switch (list) {
-            .cubes => |cubes| {
-                for (cubes.items, 0..) |cube, i| {
-                    const is_intercepted = Cube.intercept(origin.toSlice(), direction.toSlice(), cube.offset);
+    const is_hit = blk: {
+        for (State.instance.objects.getLists()) |list| {
+            switch (list) {
+                .cubes => |cubes| {
+                    for (cubes.items, 0..) |cube, i| {
+                        const is_intercepted = Cube.intercept(origin.toSlice(), direction.toSlice(), cube.offset);
 
-                    if (is_intercepted) {
-                        self.ammo = self.replenish_ammo;
-                        Cube.removeIndex(@intCast(i));
-                        break;
+                        if (is_intercepted) {
+                            self.ammo = self.replenish_ammo;
+                            Cube.removeIndex(@intCast(i));
+                            break :blk true;
+                        }
                     }
-                }
-            },
-            .spheres => |spheres| {
-                for (spheres.items, 0..) |sphere, i| {
-                    const is_intercepted = Sphere.intercept(origin.toSlice(), direction.toSlice(), sphere.offset.toSlice(), sphere.radius);
+                },
+                .spheres => |spheres| {
+                    for (spheres.items, 0..) |sphere, i| {
+                        const is_intercepted = Sphere.intercept(origin.toSlice(), direction.toSlice(), sphere.offset.toSlice(), sphere.radius);
 
-                    if (is_intercepted) {
-                        self.ammo = self.replenish_ammo;
-                        Sphere.removeIndex(@intCast(i));
-                        break;
+                        if (is_intercepted) {
+                            self.ammo = self.replenish_ammo;
+                            Sphere.removeIndex(@intCast(i));
+                            break :blk true;
+                        }
                     }
-                }
-            },
+                },
+            }
         }
-    }
+        break :blk false;
+    };
+
+    return is_hit;
 }
 
 pub fn reload(self: *@This()) void {

@@ -31,6 +31,7 @@ pub inline fn draw(allocator: Allocator) void {
     });
     FrameInfo.draw();
     Ammo.draw();
+    Stats.draw();
     if (settings.is_imgui_open or settings.is_ui_open) {
         if (settings.is_imgui_open) {
             MovementInfo.draw();
@@ -50,6 +51,7 @@ const ObjectInfo = @import("object_info.zig");
 const FrameInfo = @import("frame_info.zig");
 const SettingsMenu = @import("settings_menu.zig");
 const Ammo = @import("ammo.zig");
+const Stats = @import("stats.zig");
 
 const State = @import("../state.zig");
 
