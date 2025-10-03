@@ -3,7 +3,7 @@ pub inline fn handle(event: Event) void {
         .KEY_DOWN => State.instance.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), true),
         .KEY_UP => State.instance.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), false),
         .MOUSE_MOVE => {
-            if (State.instance.ui_settings.is_ui_open) return;
+            if (State.instance.settings.ui_settings.is_ui_open) return;
             const dx: f32 = event.mouse_dx * State.instance.camera.sensitivity;
             const dy: f32 = event.mouse_dy * State.instance.camera.sensitivity;
 

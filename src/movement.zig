@@ -8,7 +8,7 @@ pub const Settings = struct {
 };
 pub inline fn perFrame(dt: f32) void {
     const settings = State.instance.settings.movement_settings;
-    if (State.instance.ui_settings.is_ui_open) return;
+    if (State.instance.settings.ui_settings.is_ui_open) return;
     var direction = Vec3.zero();
     const forward = Vec3.norm(.{
         .x = @cos(State.instance.camera.yaw) * @cos(State.instance.camera.pitch),

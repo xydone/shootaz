@@ -21,7 +21,7 @@ pub inline fn shutdown() void {
 }
 
 pub inline fn draw(allocator: Allocator) void {
-    const settings = State.instance.ui_settings;
+    const settings = State.instance.settings.ui_settings;
     // call simgui.newFrame() before any ImGui calls
     simgui.newFrame(.{
         .width = sapp.width(),

@@ -12,7 +12,7 @@ pub const Settings = struct {
 };
 
 pub fn perFrame(dt: f32) void {
-    if (State.instance.ui_settings.is_ui_open) return;
+    if (State.instance.settings.ui_settings.is_ui_open) return;
     const settings = State.instance.settings.player_settings;
 
     if (State.instance.player.active_weapon.cooldown > 0.0) {
