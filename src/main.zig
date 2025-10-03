@@ -14,13 +14,14 @@ export fn init() void {
         .logger = .{ .func = slog.func },
     });
 
+    State.instance.settings.stats_settings = StatsSettings.init(allocator) catch @panic("Couldn't read setting.");
+
     Cube.init(allocator);
     Sphere.init(allocator);
+    Plane.init();
 
     State.instance.objects.cube_list = Cube.getListPtr();
     State.instance.objects.sphere_list = Sphere.getListPtr();
-
-    Plane.init();
 
     Crosshair.init(allocator);
 
@@ -90,6 +91,8 @@ pub fn main() void {
         .logger = .{ .func = slog.func },
     });
 }
+
+const StatsSettings = @import("player/stats.zig").Settings;
 
 const ScriptManager = @import("scripting/script_manager.zig");
 

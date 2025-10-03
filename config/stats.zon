@@ -1,0 +1,4 @@
+.{
+    // should each run be saved as a file
+    .save_to_file = true,
+}

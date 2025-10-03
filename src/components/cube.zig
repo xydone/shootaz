@@ -81,10 +81,6 @@ pub fn getListPtr() *std.ArrayList(InstanceData) {
     return &cube_positions;
 }
 
-pub fn save(allocator: Allocator, file_name: []const u8) !void {
-    saveToFile(InstanceData, allocator, file_name, cube_positions.items) catch @panic("Save failed!");
-}
-
 pub fn load(allocator: Allocator, file_name: []const u8) !void {
     const path = try std.fmt.allocPrint(allocator, "config/{s}.zon", .{file_name});
     defer allocator.free(path);
@@ -204,8 +200,6 @@ fn initVertices(color_list: [6][4]f32) [24][7]f32 {
         createVertex(.{ 1, 1, -1 }, color_list[5]),
     };
 }
-
-const saveToFile = @import("../util/saveToFile.zig").saveToFile;
 
 const createVertex = @import("../util.zig").createVertex;
 

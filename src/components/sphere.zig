@@ -95,10 +95,6 @@ pub fn getListPtr() *std.ArrayList(InstanceData) {
     return &instance_data;
 }
 
-pub fn save(allocator: Allocator, file_name: []const u8) !void {
-    saveToFile(InstanceData, allocator, file_name, instance_data.items) catch @panic("Save failed!");
-}
-
 pub fn load(allocator: Allocator, file_name: []const u8) !void {
     const path = try std.fmt.allocPrint(allocator, "config/{s}.zon", .{file_name});
     defer allocator.free(path);
@@ -171,8 +167,6 @@ pub fn intercept(ray_origin: [3]f32, ray_dir: [3]f32, center: [3]f32, radius: f3
 
     return (t1 >= 0.0 or t2 >= 0.0);
 }
-
-const saveToFile = @import("../util/saveToFile.zig").saveToFile;
 
 const red = @import("../colors.zig").red;
 

@@ -1,5 +1,5 @@
-pub fn saveToFile(T: type, allocator: Allocator, file_name: []const u8, items: []T) !void {
-    const path = try std.fmt.allocPrint(allocator, "config/{s}.zon", .{file_name});
+pub fn saveToFile(T: type, allocator: Allocator, folder_name: []const u8, file_name: []const u8, data: T) !void {
+    const path = try std.fmt.allocPrint(allocator, "{s}/{s}.zon", .{ folder_name, file_name });
     defer allocator.free(path);
     const file = std.fs.cwd().createFile(path, .{}) catch |err| file: {
         switch (err) {
@@ -18,7 +18,7 @@ pub fn saveToFile(T: type, allocator: Allocator, file_name: []const u8, items: [
     defer file.close();
 
     var writer = std.Io.Writer.Allocating.init(allocator);
-    try std.zon.stringify.serialize(items, .{ .whitespace = false }, &writer.writer);
+    try std.zon.stringify.serialize(data, .{ .whitespace = false }, &writer.writer);
 
     const string = try writer.toOwnedSlice();
     defer allocator.free(string);

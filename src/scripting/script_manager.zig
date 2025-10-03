@@ -1,6 +1,7 @@
 lua: *Lua,
 is_update_script_running: bool = false,
 timer: Timer,
+script_name: ?[]const u8 = null,
 
 const Timer = struct {
     is_active: bool = false,
@@ -68,6 +69,8 @@ pub fn doFile(self: *LuaSetup, allocator: Allocator, file_name: []const u8) erro
         return error.FileNotFound;
     };
 
+    self.script_name = file_name;
+
     _ = self.lua.getGlobal("MAX_RUNTIME") catch return;
     const duration: u64 = @intFromFloat(self.lua.toNumber(-1) catch return);
 
@@ -79,7 +82,8 @@ pub fn update(self: *LuaSetup) void {
 
     if (self.timer.check()) {
         self.is_update_script_running = false;
-        self.timerCallback();
+        State.instance.player.stats.save(self.script_name.?, self.lua.allocator()) catch @panic("Couldn't save stats.");
+        self.onTimerEnd();
         return;
     }
 
@@ -91,7 +95,7 @@ pub fn startTimer(self: *LuaSetup, duration: f64) void {
     self.timer.start(duration);
 }
 
-pub fn timerCallback(self: *LuaSetup) void {
+pub fn onTimerEnd(self: *LuaSetup) void {
     _ = self.lua.getGlobal("onTimerEnd") catch return;
     self.lua.protectedCall(.{}) catch @panic("pcall failed");
 }
@@ -99,6 +103,8 @@ pub fn timerCallback(self: *LuaSetup) void {
 const Crosshair = @import("crosshair.zig");
 const Player = @import("player.zig");
 const Object = @import("object.zig");
+
+const State = @import("../state.zig");
 
 const Lua = zlua.Lua;
 const zlua = @import("zlua");
