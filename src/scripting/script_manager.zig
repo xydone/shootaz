@@ -76,6 +76,13 @@ pub fn doFile(self: *LuaSetup, allocator: Allocator, file_name: []const u8) erro
     self.script_name = file_name;
 
     _ = self.lua.getGlobal("MAX_RUNTIME") catch return;
+    const has_update = blk: {
+        _ = self.lua.getGlobal("update") catch break :blk false;
+        self.lua.pop(1);
+        break :blk true;
+    };
+
+    if (has_update) self.is_update_script_running = true;
     const duration: u64 = @intFromFloat(self.lua.toNumber(-1) catch return);
 
     self.timer.start(duration * std.time.ns_per_s);

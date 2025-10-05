@@ -8,7 +8,7 @@ export fn init() void {
         .environment = sglue.environment(),
         .logger = .{ .func = slog.func },
     });
-    ui.init();
+    ui.init(allocator);
 
     sgl.setup(.{
         .logger = .{ .func = slog.func },
@@ -84,7 +84,7 @@ export fn cleanup() void {
     Cube.deinit(allocator);
     Crosshair.deinit(allocator);
     State.instance.script_manager.deinit();
-    ui.shutdown();
+    ui.shutdown(allocator);
     sgl.shutdown();
     sg.shutdown();
 }

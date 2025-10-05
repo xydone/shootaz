@@ -2,10 +2,11 @@ pub const Settings = struct {
     is_ui_open: bool = false,
     is_imgui_open: bool = false,
 };
-pub inline fn init() void {
+pub inline fn init(allocator: Allocator) void {
     simgui.setup(.{
         .logger = .{ .func = slog.func },
     });
+    ScriptLauncher.init(allocator);
 }
 
 pub inline fn render() void {
@@ -16,8 +17,9 @@ pub inline fn handleInput(event: sapp.Event) void {
     _ = simgui.handleEvent(event);
 }
 
-pub inline fn shutdown() void {
+pub inline fn shutdown(allocator: Allocator) void {
     simgui.shutdown();
+    ScriptLauncher.deinit(allocator);
 }
 
 pub inline fn draw(allocator: Allocator) void {
@@ -36,10 +38,10 @@ pub inline fn draw(allocator: Allocator) void {
         if (settings.is_imgui_open) {
             MovementInfo.draw();
             CameraInfo.draw();
-            ObjectInfo.draw(allocator);
         }
         if (settings.is_ui_open) {
             SettingsMenu.draw();
+            ScriptLauncher.draw(allocator);
         }
     }
 }
@@ -47,7 +49,7 @@ pub inline fn draw(allocator: Allocator) void {
 // UI Components
 const CameraInfo = @import("camera_info.zig");
 const MovementInfo = @import("movement_info.zig");
-const ObjectInfo = @import("object_info.zig");
+const ScriptLauncher = @import("script_launcher.zig");
 const FrameInfo = @import("frame_info.zig");
 const SettingsMenu = @import("settings_menu.zig");
 const Ammo = @import("ammo.zig");
