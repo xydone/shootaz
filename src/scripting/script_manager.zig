@@ -82,7 +82,10 @@ pub fn doFile(self: *LuaSetup, allocator: Allocator, file_name: []const u8) erro
         break :blk true;
     };
 
-    if (has_update) self.is_update_script_running = true;
+    if (has_update) {
+        self.is_update_script_running = true;
+        State.instance.player.stats = .{};
+    }
     const duration: u64 = @intFromFloat(self.lua.toNumber(-1) catch return);
 
     self.timer.start(duration * std.time.ns_per_s);
