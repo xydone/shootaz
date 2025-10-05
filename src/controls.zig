@@ -1,3 +1,18 @@
+pub const Settings = struct {
+    reload: Keycode = .R,
+    shoot: Mousebutton = .LEFT,
+    move_forward: Keycode = .W,
+    move_back: Keycode = .S,
+    move_left: Keycode = .A,
+    move_right: Keycode = .D,
+    move_up: Keycode = .SPACE,
+    move_down: Keycode = .LEFT_SHIFT,
+
+    pub fn init(allocator: Allocator) !Settings {
+        return readZon(Settings, allocator, "config/controls.zon", 1024);
+    }
+};
+
 pub inline fn handle(event: Event) void {
     switch (event.type) {
         .KEY_DOWN => State.instance.input_state.keys.setValue(@intCast(@intFromEnum(event.key_code)), true),
@@ -47,6 +62,8 @@ pub const InputState = struct {
 const LAST_KEY_IN_KEYCODE_LIST = Keycode.MENU;
 const LAST_MOUSE_BUTTON_IN_LIST = Mousebutton.MIDDLE;
 
+const readZon = @import("util/readZon.zig").readZon;
+
 const Gun = @import("player/gun.zig");
 const State = @import("state.zig");
 
@@ -56,4 +73,5 @@ const Keycode = sapp.Keycode;
 const sapp = sokol.app;
 const sokol = @import("sokol");
 
+const Allocator = std.mem.Allocator;
 const std = @import("std");

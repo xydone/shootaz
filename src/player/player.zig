@@ -6,21 +6,16 @@ active_weapon: Gun = .{
 },
 stats: Stats = .{},
 
-pub const Settings = struct {
-    reload_key: Keycode = .R,
-    shoot_button: Mousebutton = .LEFT,
-};
-
 pub fn perFrame(dt: f32) void {
     if (State.instance.settings.ui_settings.is_ui_open) return;
-    const settings = State.instance.settings.player_settings;
+    const controls = State.instance.settings.controls;
 
     if (State.instance.player.active_weapon.cooldown > 0.0) {
         State.instance.player.active_weapon.cooldown -= dt;
         return;
     }
 
-    const is_shooting = State.instance.input_state.isMouseButtonPressed(settings.shoot_button);
+    const is_shooting = State.instance.input_state.isMouseButtonPressed(controls.shoot);
 
     switch (State.instance.player.active_weapon.firing_mode) {
         .semi => |*semi| {
@@ -34,7 +29,7 @@ pub fn perFrame(dt: f32) void {
         .automatic => if (is_shooting) shoot(),
     }
 
-    if (State.instance.input_state.isKeyPressed(settings.reload_key)) {
+    if (State.instance.input_state.isKeyPressed(controls.reload)) {
         reload();
     }
 }

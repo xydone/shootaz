@@ -1,0 +1,10 @@
+.{
+    .reload = .R,
+    .shoot = .LEFT,
+    .move_forward = .W,
+    .move_back = .S,
+    .move_left = .A,
+    .move_right = .D,
+    .move_up = .SPACE,
+    .move_down = .LEFT_SHIFT,
+}

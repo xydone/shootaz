@@ -14,7 +14,18 @@ export fn init() void {
         .logger = .{ .func = slog.func },
     });
 
-    State.instance.settings.stats_settings = StatsSettings.init(allocator) catch @panic("Couldn't read setting.");
+    State.instance.settings.stats_settings = blk: {
+        break :blk StatsSettings.init(allocator) catch {
+            std.log.debug("Stats settings file not found.", .{});
+            break :blk .{};
+        };
+    };
+    State.instance.settings.controls = blk: {
+        break :blk Controls.Settings.init(allocator) catch {
+            std.log.debug("Controls settings file not found.", .{});
+            break :blk .{};
+        };
+    };
 
     Cube.init(allocator);
     Sphere.init(allocator);

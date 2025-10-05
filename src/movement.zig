@@ -2,35 +2,32 @@ pub const Settings = struct {
     accel: f32 = 1,
     friction: f32 = 10,
     max_speed: f32 = 1.5,
-    valid_keys: []const Keycode = &.{ .W, .S, .A, .D, .LEFT_SHIFT, .SPACE },
     direction: Vec3 = Vec3.zero(),
     velocity: Vec3 = Vec3.zero(),
 };
 pub inline fn perFrame(dt: f32) void {
     const settings = State.instance.settings.movement_settings;
     if (State.instance.settings.ui_settings.is_ui_open) return;
-    var direction = Vec3.zero();
-    const forward = Vec3.norm(.{
-        .x = @cos(State.instance.camera.yaw) * @cos(State.instance.camera.pitch),
-        .y = 0,
-        .z = @sin(State.instance.camera.yaw) * @cos(State.instance.camera.pitch),
-    });
-    // const right = Vec3.cross(State.instance.camera.up, forward);
-    const right = Vec3.cross(forward, State.instance.camera.up);
 
-    for (settings.valid_keys) |key| {
-        if (!State.instance.input_state.isKeyPressed(key)) continue;
+    const controls = State.instance.settings.controls;
+    const direction = blk: {
+        const forward = Vec3.norm(.{
+            .x = @cos(State.instance.camera.yaw) * @cos(State.instance.camera.pitch),
+            .y = 0,
+            .z = @sin(State.instance.camera.yaw) * @cos(State.instance.camera.pitch),
+        });
+        const right = Vec3.cross(forward, State.instance.camera.up);
 
-        switch (key) {
-            .W => direction = Vec3.add(direction, forward),
-            .S => direction = Vec3.sub(direction, forward),
-            .A => direction = Vec3.sub(direction, right),
-            .D => direction = Vec3.add(direction, right),
-            .LEFT_SHIFT => direction = Vec3.sub(direction, State.instance.camera.up),
-            .SPACE => direction = Vec3.add(direction, State.instance.camera.up),
-            else => unreachable,
-        }
-    }
+        var dir = Vec3.zero();
+        if (State.instance.input_state.isKeyPressed(controls.move_forward)) dir = Vec3.add(dir, forward);
+        if (State.instance.input_state.isKeyPressed(controls.move_back)) dir = Vec3.sub(dir, forward);
+        if (State.instance.input_state.isKeyPressed(controls.move_left)) dir = Vec3.sub(dir, right);
+        if (State.instance.input_state.isKeyPressed(controls.move_right)) dir = Vec3.add(dir, right);
+        if (State.instance.input_state.isKeyPressed(controls.move_down)) dir = Vec3.sub(dir, State.instance.camera.up);
+        if (State.instance.input_state.isKeyPressed(controls.move_up)) dir = Vec3.add(dir, State.instance.camera.up);
+
+        break :blk dir;
+    };
 
     State.instance.settings.movement_settings.direction = direction;
 
@@ -61,7 +58,6 @@ pub inline fn perFrame(dt: f32) void {
     front = Vec3.norm(front);
 
     State.instance.camera.target = Vec3.add(State.instance.camera.pos, front);
-    // State.instance.camera.target = Vec3.sub(State.instance.camera.pos, front);
 }
 
 const Vec3 = @import("math.zig").Vec3;
