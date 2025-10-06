@@ -25,6 +25,7 @@ pub inline fn draw(allocator: Allocator) void {
         for (file_name_list.items) |file_name| {
             if (ig.igButton(file_name.ptr)) {
                 State.instance.script_manager.doFile(allocator, file_name) catch {};
+                toggleUI();
             }
         }
     }
@@ -49,6 +50,8 @@ pub fn fetchFiles(allocator: Allocator) error{CannotOpenDir}!void {
         file_name_list.append(allocator, allocator.dupe(u8, entry.name[0..idx]) catch @panic("OOM")) catch @panic("OOM");
     }
 }
+
+const toggleUI = @import("../menus.zig").toggleUI;
 
 const red = @import("../colors.zig").red;
 const Sphere = @import("../components/sphere.zig");
