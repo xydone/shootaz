@@ -27,6 +27,8 @@ pub fn perFrame(dt: f32) void {
             } else semi.has_fired_this_click = false;
         },
         .automatic => if (is_shooting) shoot(),
+        // unless the update script is running, do not track
+        .tracking => if (State.instance.script_manager.is_update_script_running) track(),
     }
 
     if (State.instance.input_state.isKeyPressed(controls.reload)) {
@@ -39,6 +41,12 @@ pub fn shoot() void {
     const can_shoot = State.instance.player.active_weapon.canShoot();
     if (can_shoot == false) return;
     const is_hit = State.instance.player.active_weapon.shoot();
+    if (is_hit) State.instance.player.stats.accurate_shots += 1;
+}
+
+pub fn track() void {
+    State.instance.player.stats.total_shots += 1;
+    const is_hit = State.instance.player.active_weapon.track();
     if (is_hit) State.instance.player.stats.accurate_shots += 1;
 }
 

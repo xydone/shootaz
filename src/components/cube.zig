@@ -117,6 +117,10 @@ pub fn removeIndex(i: u16) void {
     }
 }
 
+pub fn update(i: i16, data: InstanceData) void {
+    cube_positions.items[i] = data;
+}
+
 pub inline fn draw() void {
     const vs_params = computeVsParams();
     sg.applyPipeline(pipeline);

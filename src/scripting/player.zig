@@ -26,6 +26,7 @@ pub fn lua_set_weapon(lua: *Lua) c_int {
         .firing_mode = switch (firing_mode) {
             .semi => .{ .semi = .{} },
             .automatic => .{ .automatic = {} },
+            .tracking => .{ .tracking = {} },
         },
         .fire_rate = fire_rate,
     };
@@ -44,11 +45,12 @@ pub inline fn register(lua: *Lua) void {
 
     lua.setGlobal("Player");
 
-    lua.pushInteger(@intFromEnum(Gun.FiringMode.semi));
-    lua.setGlobal("FIRING_MODE_SEMI");
-
-    lua.pushInteger(@intFromEnum(Gun.FiringMode.automatic));
-    lua.setGlobal("FIRING_MODE_AUTOMATIC");
+    inline for (@typeInfo(Gun.FiringMode).@"enum".fields) |field| {
+        const value = @intFromEnum(@field(Gun.FiringMode, field.name));
+        lua.pushInteger(value);
+        const name = std.fmt.comptimePrint("FIRING_MODE_{s}", .{field.name});
+        lua.setGlobal(name);
+    }
 }
 
 const Gun = @import("../player/gun.zig");

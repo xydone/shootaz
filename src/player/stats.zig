@@ -1,6 +1,6 @@
-total_shots: u16 = 0,
-accurate_shots: u16 = 0,
-reload_count: u16 = 0,
+total_shots: u64 = 0,
+accurate_shots: u64 = 0,
+reload_count: u64 = 0,
 seed: u64 = undefined,
 
 const Stats = @This();

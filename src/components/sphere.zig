@@ -136,6 +136,11 @@ pub fn removeIndex(i: u16) void {
     }
 }
 
+pub fn update(i: u16, data: InstanceData) void {
+    instance_data.items[i] = data;
+    is_buffer_dirty = true;
+}
+
 pub fn flush() void {
     if (is_buffer_dirty and instance_data.items.len > 0) {
         sg.updateBuffer(bindings.vertex_buffers[1], sg.asRange(instance_data.items));

@@ -16,6 +16,26 @@ pub fn lua_create_sphere(lua: *Lua) c_int {
     return 1;
 }
 
+pub fn lua_update_sphere(lua: *Lua) c_int {
+    if (lua.getTop() != 5) {
+        std.debug.print("update_sphere: expected 5 arguments\n", .{});
+        return 0;
+    }
+
+    const i = lua.toNumeric(u16, 1) catch return 0;
+    const x = lua.toNumber(2) catch return 0;
+    const y = lua.toNumber(3) catch return 0;
+    const z = lua.toNumber(4) catch return 0;
+    const radius: f32 = @floatCast(lua.toNumber(5) catch return 0);
+
+    Sphere.update(i, .{
+        .offset = .{ .x = @floatCast(x), .y = @floatCast(y), .z = @floatCast(z) },
+        .radius = radius,
+        .color = red,
+    });
+    return 1;
+}
+
 pub fn lua_get_spheres(lua: *Lua) c_int {
     const spheres = Sphere.getPositions();
 
@@ -132,6 +152,9 @@ pub inline fn register(lua: *Lua) void {
 
     lua.pushFunction(zlua.wrap(lua_create_sphere));
     lua.setField(-2, "create_sphere");
+
+    lua.pushFunction(zlua.wrap(lua_update_sphere));
+    lua.setField(-2, "update_sphere");
 
     lua.pushFunction(zlua.wrap(lua_clear_spheres));
     lua.setField(-2, "clear_spheres");
