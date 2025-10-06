@@ -47,9 +47,11 @@ pub fn build(b: *Build) !void {
         .root_module = exe_mod,
     });
 
+    const shaders_step = b.step("shaders", "Build all shaders");
     for (SHADERS_LIST) |shader_name| {
         const shdc_step = try buildShader(b, dep_shdc, shader_name);
         exe.step.dependOn(shdc_step);
+        shaders_step.dependOn(shdc_step);
     }
 
     b.installArtifact(exe);
@@ -87,7 +89,6 @@ pub fn build(b: *Build) !void {
 
 const SHADERS_LIST = [_][]const u8{
     "cube",
-    "plane",
     "crosshair",
     "sphere",
 };

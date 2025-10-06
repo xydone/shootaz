@@ -1,4 +1,4 @@
-MAX_RUNTIME = 1
+MAX_RUNTIME = 30
 
 local x = 0
 local y = 5

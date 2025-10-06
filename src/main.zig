@@ -1,5 +1,3 @@
-var floor_bindings: sg.Bindings = undefined;
-
 const allocator = std.heap.smp_allocator;
 export fn init() void {
     State.instance.script_manager = ScriptManager.init(allocator);
@@ -29,7 +27,6 @@ export fn init() void {
 
     Cube.init(allocator);
     Sphere.init(allocator);
-    Plane.init();
 
     State.instance.objects.cube_list = Cube.getListPtr();
     State.instance.objects.sphere_list = Sphere.getListPtr();
@@ -37,10 +34,8 @@ export fn init() void {
     Crosshair.init(allocator);
 
     // framebuffer clear color
-    // State.instance.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0.25, .g = 0.5, .b = 0.75, .a = 1 } };
     State.instance.pass_action.colors[0] = .{ .load_action = .CLEAR, .clear_value = .{ .r = 0, .g = 0, .b = 0, .a = 1 } };
 
-    // lock mouse
     sapp.lockMouse(true);
 }
 
@@ -109,7 +104,6 @@ const ScriptManager = @import("scripting/script_manager.zig");
 
 const Object = @import("components/object.zig");
 const Grid = @import("components/grid.zig");
-const Plane = @import("components/plane.zig");
 const Cube = @import("components/cube.zig");
 const Sphere = @import("components/sphere.zig");
 
