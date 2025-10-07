@@ -6,7 +6,7 @@ active_weapon: Gun = .{
 },
 stats: Stats = .{},
 
-pub fn perFrame(dt: f32) void {
+pub fn perFrame(dt: f32, allocator: Allocator) void {
     if (State.instance.settings.ui_settings.is_ui_open) return;
     const controls = State.instance.settings.controls;
 
@@ -21,12 +21,12 @@ pub fn perFrame(dt: f32) void {
         .semi => |*semi| {
             if (is_shooting) {
                 if (semi.has_fired_this_click == false) {
-                    shoot();
+                    shoot(allocator);
                     semi.has_fired_this_click = true;
                 }
             } else semi.has_fired_this_click = false;
         },
-        .automatic => if (is_shooting) shoot(),
+        .automatic => if (is_shooting) shoot(allocator),
         // unless the update script is running, do not track
         .tracking => if (State.instance.script_manager.is_update_script_running) track(),
     }
@@ -36,12 +36,18 @@ pub fn perFrame(dt: f32) void {
     }
 }
 
-pub fn shoot() void {
+pub fn shoot(allocator: Allocator) void {
     State.instance.player.stats.total_shots += 1;
     const can_shoot = State.instance.player.active_weapon.canShoot();
     if (can_shoot == false) return;
     const is_hit = State.instance.player.active_weapon.shoot();
-    if (is_hit) State.instance.player.stats.accurate_shots += 1;
+    if (is_hit) {
+        State.instance.player.stats.accurate_shots += 1;
+        if (State.instance.settings.stats_settings.time_hits) {
+            std.debug.assert(State.instance.script_manager.timer.is_active);
+            State.instance.player.stats.hit_timestamps.append(allocator, State.instance.script_manager.timer.inner_timer.read()) catch @panic("OOM");
+        }
+    }
 }
 
 pub fn track() void {
@@ -64,3 +70,6 @@ const Mousebutton = @import("sokol").app.Mousebutton;
 const Keycode = @import("sokol").app.Keycode;
 
 const Gun = @import("gun.zig");
+
+const Allocator = std.mem.Allocator;
+const std = @import("std");

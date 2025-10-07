@@ -1,4 +1,6 @@
 .{
     // should each run be saved as a file
     .save_to_file = true,
+    // should each hit's timestamp be tracked
+    .time_hits = true,
 }

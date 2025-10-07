@@ -49,7 +49,7 @@ export fn frame() void {
     State.instance.script_manager.update();
 
     Movement.perFrame(dt);
-    Player.perFrame(dt);
+    Player.perFrame(dt, allocator);
 
     sg.beginPass(.{ .action = State.instance.pass_action, .swapchain = sglue.swapchain() });
 
