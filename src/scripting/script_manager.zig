@@ -65,8 +65,9 @@ inline fn registerFunctions(self: *LuaSetup) void {
 }
 
 pub fn doFile(self: *LuaSetup, allocator: Allocator, file_name: []const u8) error{FileNotFound}!void {
-    State.instance.player.stats = .{};
     const path = std.fmt.allocPrintSentinel(allocator, "scripts/{s}.lua", .{file_name}, 0) catch @panic("OOM");
+    defer allocator.free(path);
+
     self.lua.doFile(path) catch {
         const err = self.lua.toString(-1) catch return;
         std.debug.print("err: {s}\n", .{err});
@@ -98,6 +99,7 @@ pub fn update(self: *LuaSetup) void {
     if (self.timer.check()) {
         self.is_update_script_running = false;
         State.instance.player.stats.save(self.script_name.?, self.lua.allocator()) catch @panic("Couldn't save stats.");
+        State.instance.player.stats.reset(self.lua.allocator());
         self.timer.is_active = false;
         self.onTimerEnd();
         return;

@@ -83,10 +83,6 @@ fn computeVsParams() shader.VsParams {
     };
 }
 
-pub fn deinit(allocator: Allocator) void {
-    instance_data.deinit(allocator);
-}
-
 pub fn getPositions() []InstanceData {
     return instance_data.items;
 }

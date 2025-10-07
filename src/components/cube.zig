@@ -69,10 +69,6 @@ pub inline fn init(allocator: Allocator) void {
     });
 }
 
-pub fn deinit(allocator: Allocator) void {
-    cube_positions.deinit(allocator);
-}
-
 pub fn getPositions() []InstanceData {
     return cube_positions.items;
 }

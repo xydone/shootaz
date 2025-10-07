@@ -1,5 +1,16 @@
-const allocator = std.heap.smp_allocator;
+var debug_allocator: std.heap.DebugAllocator(.{}) = .init;
+// must be defined in init
+var allocator: std.mem.Allocator = undefined;
+var is_debug: bool = undefined;
+
 export fn init() void {
+    allocator, is_debug = gpa: {
+        break :gpa switch (builtin.mode) {
+            .Debug, .ReleaseSafe => .{ debug_allocator.allocator(), true },
+            .ReleaseFast, .ReleaseSmall => .{ std.heap.smp_allocator, false },
+        };
+    };
+
     State.instance.script_manager = ScriptManager.init(allocator);
 
     sg.setup(.{
@@ -76,7 +87,10 @@ export fn input(ev: ?*const sapp.Event) void {
 }
 
 export fn cleanup() void {
-    Cube.deinit(allocator);
+    defer if (is_debug) {
+        _ = debug_allocator.deinit();
+    };
+    State.instance.objects.deinit(allocator);
     Crosshair.deinit(allocator);
     State.instance.script_manager.deinit();
     ui.shutdown(allocator);

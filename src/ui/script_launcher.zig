@@ -14,6 +14,7 @@ pub inline fn init(allocator: Allocator) void {
 }
 
 pub inline fn deinit(allocator: Allocator) void {
+    for (file_name_list.items) |item| allocator.free(item);
     file_name_list.deinit(allocator);
 }
 
@@ -32,6 +33,7 @@ pub inline fn draw(allocator: Allocator) void {
 
     ig.igSeparator();
     if (ig.igButton("Refetch scripts")) {
+        for (file_name_list.items) |item| allocator.free(item);
         fetchFiles(allocator) catch {};
     }
 }

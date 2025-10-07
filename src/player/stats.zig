@@ -1,8 +1,13 @@
 total_shots: u64 = 0,
 accurate_shots: u64 = 0,
 reload_count: u64 = 0,
-seed: u64 = 123,
+seed: u64 = 0,
 hit_timestamps: std.ArrayList(u64) = .empty,
+
+pub fn reset(self: *@This(), allocator: Allocator) void {
+    self.hit_timestamps.clearAndFree(allocator);
+    // self.* = @This(){};
+}
 
 const Stats = @This();
 
